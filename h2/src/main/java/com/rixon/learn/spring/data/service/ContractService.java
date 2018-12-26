@@ -9,6 +9,8 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.function.Function;
+
 @Service
 public class ContractService {
 
@@ -22,7 +24,19 @@ public class ContractService {
     }
 
     public Mono<Contract> byId(String id) {
-        LOGGER.info("Returning contract for id [{}]",id);
+        LOGGER.info("Returning contract for id [{}]", id);
         return Mono.just(contractRepository.findById(id).get());
+    }
+
+    public Mono<String> createOrUpdate(Mono<Contract> contractMono) {
+        return contractMono.flatMap((Function<Contract, Mono<String>>) contract -> {
+            if (contract != null) {
+                contractRepository.save(contract);
+                return Mono.just("Created contract successfully with id " + contract.getId());
+
+            } else {
+                return Mono.just("Null contract received ");
+            }
+        });
     }
 }

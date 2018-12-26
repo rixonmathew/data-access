@@ -23,3 +23,8 @@
 /dist/
 /nbdist/
 /.nb-gradle/
+cassandra/src/main/java/com/rixon/learn/spring/data/dataaccess/configuration/
+cassandra/src/main/java/com/rixon/learn/spring/data/dataaccess/service/
+cassandra/src/test/
+commons/src/test/
+reactive-cassandra/src/test/

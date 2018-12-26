@@ -11,10 +11,18 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.context.annotation.Bean;
+import org.springframework.http.MediaType;
+import org.springframework.web.reactive.function.BodyExtractors;
+import org.springframework.web.reactive.function.server.HandlerFunction;
 import org.springframework.web.reactive.function.server.RouterFunction;
+import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
+import reactor.core.publisher.Mono;
 
-import static org.springframework.web.reactive.function.server.RequestPredicates.GET;
+import java.util.function.Consumer;
+import java.util.function.Function;
+
+import static org.springframework.web.reactive.function.server.RequestPredicates.*;
 import static org.springframework.web.reactive.function.server.RouterFunctions.route;
 import static org.springframework.web.reactive.function.server.ServerResponse.ok;
 
@@ -29,12 +37,11 @@ public class H2DataAccessApplication {
         return route(GET("/contracts"),
                 request -> ok().body(contractService.findAllContracts(), Contract.class))
                 .andRoute(GET("/contracts/{id}"),
-                        request -> ok().body(contractService.byId(request.pathVariable("id")), Contract.class));
-//                .andRoute(GET("/movies/{id}/events"),
-//                        request ->ok()
-//                                .contentType(MediaType.TEXT_EVENT_STREAM)
-//                                .body(contractService.byId(request.pathVariable("id"))
-//                                        .flatMapMany(contractService::events),MovieEvent.class));
+                        request -> ok().body(contractService.byId(request.pathVariable("id")), Contract.class))
+                .andRoute(POST("/contracts").and(accept(MediaType.APPLICATION_JSON)), serverRequest -> {
+                    Mono<Contract> body = serverRequest.body(BodyExtractors.toMono(Contract.class));
+                    return ok().body(contractService.createOrUpdate(body),String.class);
+                });
     }
 
 
