@@ -14,6 +14,4 @@ public class Oracle18cApplicationTests {
     @DisplayName("Context loads successfully")
     public void contextLoads() {
     }
-
 }
-
