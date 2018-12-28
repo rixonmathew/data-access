@@ -1,15 +1,17 @@
 package com.rixon.learn.spring.data.oracle18c;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringRunner;
 
-@RunWith(SpringRunner.class)
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.SpringBootTest;
+
 @SpringBootTest
+@Disabled
 public class Oracle18cApplicationTests {
 
-    @Test
+    @Test()
+    @DisplayName("Context loads successfully")
     public void contextLoads() {
     }
 
