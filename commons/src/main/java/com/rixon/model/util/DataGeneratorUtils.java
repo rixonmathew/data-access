@@ -1,6 +1,7 @@
 package com.rixon.model.util;
 
 import com.rixon.model.contract.Contract;
+import com.rixon.model.instrument.Instrument;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -29,5 +30,20 @@ public class DataGeneratorUtils {
         contract.setSettlementDate(LocalDate.now().plusDays(3));
         contract.setComments(String.valueOf(index));
         return contract;
+    }
+
+    public static List<Instrument> randomInstruments(long count) {
+        return LongStream.range(0,count)
+                .mapToObj(DataGeneratorUtils::randomInstrument)
+                .collect(Collectors.toList());
+    }
+
+    private static  Instrument randomInstrument(long id) {
+        Instrument instrument = new Instrument();
+        instrument.setId(id);
+        instrument.setName("AB CORP SHARES");
+        instrument.setType("BOND");
+        instrument.setMetadata("{'inceptionDate':'01-Jan-1908','rating':'BB+'}");
+        return instrument;
     }
 }

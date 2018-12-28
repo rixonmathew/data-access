@@ -8,10 +8,6 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 
-@AllArgsConstructor
-@ToString
-@EqualsAndHashCode
-@NoArgsConstructor
 @Entity
 @Data
 public class Contract {
