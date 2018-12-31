@@ -5,10 +5,8 @@
 	<groupId>com.rixon.learn.spring.data</groupId>
 	<artifactId>reactive-mongo</artifactId>
 	<packaging>jar</packaging>
-
 	<name>reactive-mongo</name>
 	<description>Demo project for getting data from mongo using reactive drivers</description>
-
 	<parent>
 		<groupId>com.rixon.learn.spring.data</groupId>
 		<artifactId>data-access</artifactId>
@@ -18,18 +16,6 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-data-mongodb-reactive</artifactId>
-		</dependency>
-		<!-- Provide JUnit 5 API -->
-		<dependency>
-			<groupId>org.junit.jupiter</groupId>
-			<artifactId>junit-jupiter-api</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<!-- and the engine for surefire and failsafe -->
-		<dependency>
-			<groupId>org.junit.jupiter</groupId>
-			<artifactId>junit-jupiter-engine</artifactId>
-			<scope>test</scope>
 		</dependency>
 	</dependencies>
 </project>
