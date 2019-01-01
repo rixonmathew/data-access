@@ -55,7 +55,7 @@ public class ReactiveMongoDBDataAccessApplication {
 		return args -> reactiveMongoContractRepository.deleteAll()
 				.subscribe(null,null
 						,()->{
-							List<ContractMongo> contracts = IntStream.rangeClosed(1, 100)
+							List<ContractMongo> contracts = IntStream.rangeClosed(1, 10_000)
 									.mapToObj(ReactiveMongoDBDataAccessApplication::randomContract)
 									.collect(Collectors.toList());
 							reactiveMongoContractRepository.saveAll(contracts)

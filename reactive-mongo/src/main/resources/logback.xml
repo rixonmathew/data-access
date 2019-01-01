@@ -17,6 +17,7 @@
             <!--<totalSizeCap>100MB</totalSizeCap>-->
         <!--</rollingPolicy>-->
     <!--</appender>-->
+    <logger name="org.mongodb.driver" level="error" />
     <root level="info">
         <appender-ref ref="STDOUT"/>
         <!--<appender-ref ref="SAVE-TO-FILE"/>-->

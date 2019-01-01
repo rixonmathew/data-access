@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
+import reactor.util.function.Tuple3;
 
 import java.time.Duration;
 import java.time.LocalDate;
@@ -51,7 +52,9 @@ public class ReactiveMongoContractService {
     }
 
     public  Flux<ContractEventMongo> events(ContractMongo contractMongo) {
-        Flux<Long> interval = Flux.interval(Duration.ofMillis(100));
+        LOGGER.info("Returning events for [{}]",contractMongo.getId());
+        Flux<Long> duration = Flux.interval(Duration.ofMillis(100));
+        Flux<Integer> interval = Flux.range(1,20);
         Flux<ContractEventMongo> contractEventMongoFlux = Flux.fromStream(Stream.generate((new Supplier<ContractEventMongo>() {
             @Override
             public ContractEventMongo get() {
@@ -61,10 +64,11 @@ public class ReactiveMongoContractService {
                 contractEventMongo.setDate(LocalDate.now());
                 contractEventMongo.setDescription("This is a random event ");
                 contractEventMongo.setType(randomEventType());
+                LOGGER.info("Returning event with id [{}] for contract id [{}]",contractEventMongo.getId(),contractEventMongo.getContractId());
                 return contractEventMongo;
             }
         })));
-        return Flux.zip(interval,contractEventMongoFlux).map(Tuple2::getT2);
+        return Flux.zip(duration,interval,contractEventMongoFlux).map(Tuple3::getT3);
     }
 
     private String randomEventType() {

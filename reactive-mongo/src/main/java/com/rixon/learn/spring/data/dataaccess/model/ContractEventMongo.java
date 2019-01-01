@@ -6,7 +6,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDate;
 
-@Document
+@Document(collection = "contract_events")
 @Data
 public class ContractEventMongo {
     @Id
@@ -15,5 +15,4 @@ public class ContractEventMongo {
     private String type;
     private LocalDate date;
     private String description;
-
 }
