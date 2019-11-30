@@ -6,8 +6,6 @@ import com.hazelcast.core.HazelcastInstance;
 public class HazelCastServerApplication {
 
     public static void main(String[] args) {
-
         HazelcastInstance hzInstance = Hazelcast.newHazelcastInstance();
-
     }
 }
