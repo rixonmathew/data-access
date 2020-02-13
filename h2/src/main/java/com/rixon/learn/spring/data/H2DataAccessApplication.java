@@ -44,8 +44,9 @@ public class H2DataAccessApplication {
     CommandLineRunner commandLineRunner(ContractRepository contractRepository) {
         return args -> {
             contractRepository.deleteAll();
-            contractRepository.saveAll(DataGeneratorUtils.randomContracts(1_000L));
-            LOGGER.info("Created contracts");
+            long startTime=System.currentTimeMillis();
+            contractRepository.saveAll(DataGeneratorUtils.randomContracts(1_000_000L));
+            LOGGER.info("Created contracts in [{}] seconds",(System.currentTimeMillis()-startTime)/1000);
         };
     }
 

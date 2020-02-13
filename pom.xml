@@ -14,7 +14,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>2.1.5.RELEASE</version>
+		<version>2.2.2.RELEASE</version>
 		<relativePath/>
 	</parent>
 
@@ -36,7 +36,8 @@
 		<module>reactive-mongo</module>
 		<module>reactive-cassandra</module>
 		<module>hazelcast-server</module>
-	</modules>
+        <module>reactive-h2</module>
+    </modules>
 
 	<dependencies>
 		<dependency>
