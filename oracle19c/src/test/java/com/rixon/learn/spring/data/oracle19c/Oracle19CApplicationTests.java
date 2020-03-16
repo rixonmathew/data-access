@@ -1,4 +1,4 @@
-package com.rixon.learn.spring.data.oracle18c;
+package com.rixon.learn.spring.data.oracle19c;
 
 
 import org.junit.jupiter.api.Disabled;
@@ -8,7 +8,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
 @Disabled
-public class Oracle18cApplicationTests {
+public class Oracle19CApplicationTests {
 
     @Test()
     @DisplayName("Context loads successfully")

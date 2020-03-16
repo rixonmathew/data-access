@@ -1,7 +1,7 @@
-package com.rixon.learn.spring.data.oracle18c;
+package com.rixon.learn.spring.data.oracle19c;
 
-import com.rixon.learn.spring.data.oracle18c.service.InstrumentRepository;
-import com.rixon.learn.spring.data.oracle18c.service.InstrumentService;
+import com.rixon.learn.spring.data.oracle19c.service.InstrumentRepository;
+import com.rixon.learn.spring.data.oracle19c.service.InstrumentService;
 import com.rixon.model.instrument.Instrument;
 import com.rixon.model.util.DataGeneratorUtils;
 import org.slf4j.Logger;
@@ -23,13 +23,13 @@ import static org.springframework.web.reactive.function.server.ServerResponse.ok
 
 @SpringBootApplication
 @EntityScan("com.rixon.model.instrument")
-public class Oracle18cApplication {
+public class Oracle19cApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(Oracle18cApplication.class, args);
+        SpringApplication.run(Oracle19cApplication.class, args);
     }
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(Oracle18cApplication.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(Oracle19cApplication.class);
 
     @Bean
     RouterFunction<ServerResponse> routerFunction(InstrumentService instrumentService) {
@@ -47,8 +47,8 @@ public class Oracle18cApplication {
     @Bean
     CommandLineRunner commandLineRunner(InstrumentRepository instrumentRepository) {
         return args -> {
-            instrumentRepository.deleteAll();
-            instrumentRepository.saveAll(DataGeneratorUtils.randomInstruments(100));
+//            instrumentRepository.deleteAll();
+            instrumentRepository.saveAll(DataGeneratorUtils.randomInstruments(10_000));
             LOGGER.info("Created instruments");
         };
     }

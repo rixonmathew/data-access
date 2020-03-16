@@ -1,4 +1,4 @@
-package com.rixon.learn.spring.data.oracle18c.service;
+package com.rixon.learn.spring.data.oracle19c.service;
 
 import com.rixon.model.instrument.Instrument;
 import org.springframework.data.repository.CrudRepository;
