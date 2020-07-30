@@ -1,6 +1,6 @@
 package com.rixon.model.contract;
 
-import lombok.*;
+import lombok.Data;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;

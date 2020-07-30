@@ -3,7 +3,6 @@ package com.rixon.learn.spring.data.dataaccess;
 import com.rixon.learn.spring.data.dataaccess.model.ContractCassandra;
 import com.rixon.learn.spring.data.dataaccess.service.CassandraContractService;
 import com.rixon.learn.spring.data.dataaccess.service.ContractRepository;
-import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
@@ -19,9 +18,6 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
-import java.util.List;
-import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
