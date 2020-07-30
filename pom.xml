@@ -30,7 +30,6 @@
 	<modules>
 		<module>commons</module>
 		<module>h2</module>
-		<module>oracle18c</module>
 		<module>mongo</module>
 		<module>cassandra</module>
 		<module>reactive-mongo</module>
