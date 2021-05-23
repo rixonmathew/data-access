@@ -12,9 +12,13 @@
     <artifactId>hazelcast-server</artifactId>
     <dependencies>
         <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webflux</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.hazelcast</groupId>
             <artifactId>hazelcast</artifactId>
-            <version>3.7.2</version>
+            <version>4.1.1</version>
         </dependency>
     </dependencies>
 

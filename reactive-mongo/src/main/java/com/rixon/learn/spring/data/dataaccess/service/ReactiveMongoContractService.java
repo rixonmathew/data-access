@@ -52,8 +52,8 @@ public class ReactiveMongoContractService {
 
     public  Flux<ContractEventMongo> events(ContractMongo contractMongo) {
         LOGGER.info("Returning events for [{}]",contractMongo.getId());
-        Flux<Long> duration = Flux.interval(Duration.ofMillis(100));
-        Flux<Integer> interval = Flux.range(1,20);
+        Flux<Long> duration = Flux.interval(Duration.ofMillis(10));
+        Flux<Integer> interval = Flux.range(1,2000);
         Flux<ContractEventMongo> contractEventMongoFlux = Flux.fromStream(Stream.generate((new Supplier<ContractEventMongo>() {
             @Override
             public ContractEventMongo get() {
