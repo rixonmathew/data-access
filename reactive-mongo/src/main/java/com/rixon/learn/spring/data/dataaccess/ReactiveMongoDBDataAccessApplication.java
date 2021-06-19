@@ -44,7 +44,7 @@ public class ReactiveMongoDBDataAccessApplication {
 						request -> ok().body(reactiveMongoContractService.byId(request.pathVariable("id")),ContractMongo.class))
 				.andRoute(GET("/contracts/{id}/events"),
 						request ->ok()
-								.contentType(MediaType.APPLICATION_STREAM_JSON)
+								.contentType(MediaType.APPLICATION_OCTET_STREAM)
 								.body(reactiveMongoContractService.byId(request.pathVariable("id"))
 										.flatMapMany(reactiveMongoContractService::events), ContractEventMongo.class));
 

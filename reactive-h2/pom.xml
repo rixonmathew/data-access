@@ -9,35 +9,29 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>reactive-h2</artifactId>
-    <properties>
-        <spring-tx.version>5.2.2.RELEASE</spring-tx.version>
-        <r2dbc.h2.version>0.8.1.RELEASE</r2dbc.h2.version>
-    </properties>
     <dependencies>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-r2dbc</artifactId>
+        </dependency>
+
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
-            <version>1.4.200</version>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.data</groupId>
-            <artifactId>spring-data-r2dbc</artifactId>
-            <version>1.0.0.RELEASE</version>
         </dependency>
         <dependency>
             <groupId>io.r2dbc</groupId>
             <artifactId>r2dbc-h2</artifactId>
-            <version>${r2dbc.h2.version}</version>
         </dependency>
         <dependency>
-            <groupId>io.r2dbc</groupId>
-            <artifactId>r2dbc-spi</artifactId>
-            <version>0.8.0.RELEASE</version>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-tx</artifactId>
-            <version>${spring-tx.version}</version>
+            <groupId>io.projectreactor</groupId>
+            <artifactId>reactor-test</artifactId>
+            <scope>test</scope>
         </dependency>
     </dependencies>
     <build>
@@ -48,23 +42,4 @@
             </plugin>
         </plugins>
     </build>
-    <!-- R2DBC 0.8.0.M8 required -->
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>io.r2dbc</groupId>
-                <artifactId>r2dbc-bom</artifactId>
-                <version>Arabba-M8</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
-
-    <repositories>
-        <repository>
-            <id>spring-milestone</id>
-            <url>https://repo.spring.io/milestone</url>
-        </repository>
-    </repositories>
 </project>

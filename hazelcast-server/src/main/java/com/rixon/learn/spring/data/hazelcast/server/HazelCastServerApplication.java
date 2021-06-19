@@ -1,6 +1,7 @@
 package com.rixon.learn.spring.data.hazelcast.server;
 
 import com.hazelcast.client.HazelcastClient;
+import com.hazelcast.client.config.ClientConfig;
 import com.hazelcast.core.HazelcastInstance;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -15,6 +16,7 @@ public class HazelCastServerApplication {
 
     @Bean
     public HazelcastInstance hazelcastInstance(){
-        return HazelcastClient.newHazelcastClient();
+        HazelcastInstance client = HazelcastClient.newHazelcastClient();
+        return client;
     }
 }
