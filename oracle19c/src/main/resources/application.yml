@@ -1,0 +1,13 @@
+spring:
+  config:
+    activate:
+      on-profile: local-19c
+
+
+
+---
+spring:
+  config:
+    activate:
+      on-profile: oracle-cloud-19c
+
