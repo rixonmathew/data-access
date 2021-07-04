@@ -1,0 +1,10 @@
+server:
+  port: 9292
+
+spring:
+  data:
+    cassandra:
+      keyspace-name: contract_store
+      port: 9142
+      contact-points: 127.0.0.1:9142
+      local-datacenter: datacenter1
