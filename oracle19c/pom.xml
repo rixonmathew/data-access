@@ -8,9 +8,9 @@
         <version>0.0.1-SNAPSHOT</version>
     </parent>
     <groupId>com.rixon.learn.spring.data</groupId>
-    <artifactId>oracle18c</artifactId>
+    <artifactId>oracle19c</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>oracle18c</name>
+    <name>oracle19c</name>
     <description>Demo project for Spring Boot</description>
 
     <properties>
