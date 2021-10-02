@@ -47,7 +47,7 @@ public class Oracle19cApplication {
     @Bean
     CommandLineRunner commandLineRunner(InstrumentRepository instrumentRepository) {
         return args -> {
-//            instrumentRepository.deleteAll();
+            instrumentRepository.deleteAll();
             instrumentRepository.saveAll(DataGeneratorUtils.randomInstruments(10_000));
             LOGGER.info("Created instruments");
         };

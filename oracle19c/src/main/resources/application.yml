@@ -28,7 +28,40 @@ logging:
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} %-5level %logger{36} - %msg%n"
     level:
-      org.hibernate.SQL: error
+      - org.hibernate.SQL: error
+
+---
+spring:
+  config:
+    activate:
+      on-profile: local-19c-ol8
+  datasource:
+    username: rixon
+    password: oracle
+    url: jdbc:oracle:thin:@oracle19c-ol8.localdomain:1521/pdb1
+    driver-class-name: oracle.jdbc.OracleDriver
+    hikari:
+      connection-timeout: 60000
+      maximum-pool-size: 50
+      minimum-idle: 10
+      max-lifetime: 300000
+      pool-name: oracle19c
+      connection-test-query: select 1 from dual
+      data-source-properties:
+        "[v$session.program]": data-access-tests
+  jpa:
+    database-platform: org.hibernate.dialect.Oracle12cDialect
+    show-sql: false
+    hibernate:
+      ddl-auto: create
+server:
+  port: 9797
+
+logging:
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} %-5level %logger{36} - %msg%n"
+    level:
+      - org.hibernate.SQL: error
 
 ---
 spring:
