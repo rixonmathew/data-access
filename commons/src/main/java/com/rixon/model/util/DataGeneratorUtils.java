@@ -33,6 +33,7 @@ public class DataGeneratorUtils {
 
     public static List<Instrument> randomInstruments(long count) {
         return LongStream.range(0,count)
+                .parallel()
                 .mapToObj(DataGeneratorUtils::randomInstrument)
                 .collect(Collectors.toList());
     }

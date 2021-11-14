@@ -17,6 +17,8 @@ import org.springframework.web.reactive.function.server.RouterFunction;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
+
 import static org.springframework.web.reactive.function.server.RequestPredicates.*;
 import static org.springframework.web.reactive.function.server.RouterFunctions.route;
 import static org.springframework.web.reactive.function.server.ServerResponse.ok;
@@ -47,9 +49,19 @@ public class Oracle19cApplication {
     @Bean
     CommandLineRunner commandLineRunner(InstrumentRepository instrumentRepository) {
         return args -> {
-            instrumentRepository.deleteAll();
-            instrumentRepository.saveAll(DataGeneratorUtils.randomInstruments(10_000));
-            LOGGER.info("Created instruments");
+
+            int count = instrumentRepository.getCount();
+            if (count ==0) {
+                LOGGER.info("Creating instruments");
+                long startTime = System.currentTimeMillis();
+                List<Instrument> instruments = DataGeneratorUtils.randomInstruments(10_000);
+                LOGGER.info("Mocked instruments in [{}] ms",System.currentTimeMillis()-startTime);
+                instrumentRepository.saveAll(instruments);
+                LOGGER.info("Created instruments");
+            } else {
+                LOGGER.info("Found {} instruments. skipping instrument creation",count);
+            }
+
         };
     }
 

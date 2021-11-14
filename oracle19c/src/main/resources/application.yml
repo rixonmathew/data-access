@@ -20,7 +20,7 @@ spring:
     database-platform: org.hibernate.dialect.Oracle12cDialect
     show-sql: false
     hibernate:
-      ddl-auto: create
+      ddl-auto: validate
 server:
   port: 9797
 
@@ -53,7 +53,7 @@ spring:
     database-platform: org.hibernate.dialect.Oracle12cDialect
     show-sql: false
     hibernate:
-      ddl-auto: create
+      ddl-auto: validate
 server:
   port: 9797
 
@@ -86,7 +86,7 @@ spring:
     database-platform: org.hibernate.dialect.Oracle12cDialect
     show-sql: false
     hibernate:
-      ddl-auto: create
+      ddl-auto: validate
 server:
   port: 9797
 
@@ -120,7 +120,7 @@ spring:
 
     show-sql: false
     hibernate:
-      ddl-auto: create
+      ddl-auto: validate
 server:
   port: 9797
 
