@@ -16,6 +16,7 @@ spring:
       connection-test-query: select 1 from dual
       data-source-properties:
         "[v$session.program]": data-access-tests
+      idle-timeout: 120000
   jpa:
     database-platform: org.hibernate.dialect.Oracle12cDialect
     show-sql: false
@@ -49,6 +50,7 @@ spring:
       connection-test-query: select 1 from dual
       data-source-properties:
         "[v$session.program]": data-access-tests
+      idle-timeout: 120000
   jpa:
     database-platform: org.hibernate.dialect.Oracle12cDialect
     show-sql: false
@@ -82,6 +84,7 @@ spring:
       connection-test-query: select 1 from dual
       data-source-properties:
         "[v$session.program]": data-access-tests
+      idle-timeout: 120000
   jpa:
     database-platform: org.hibernate.dialect.Oracle12cDialect
     show-sql: false
@@ -115,6 +118,7 @@ spring:
       connection-test-query: select 1 from dual
       data-source-properties:
         "[v$session.program]": data-access-tests
+      idle-timeout: 120000
   jpa:
     database-platform: org.hibernate.dialect.Oracle12cDialect
 
