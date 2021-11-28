@@ -15,7 +15,6 @@ import java.time.LocalDate;
 import java.util.Random;
 import java.util.UUID;
 import java.util.function.Function;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 
@@ -54,18 +53,15 @@ public class ReactiveMongoContractService {
         LOGGER.info("Returning events for [{}]",contractMongo.getId());
         Flux<Long> duration = Flux.interval(Duration.ofMillis(10));
         Flux<Integer> interval = Flux.range(1,2000);
-        Flux<ContractEventMongo> contractEventMongoFlux = Flux.fromStream(Stream.generate((new Supplier<ContractEventMongo>() {
-            @Override
-            public ContractEventMongo get() {
-                ContractEventMongo contractEventMongo = new ContractEventMongo();
-                contractEventMongo.setId(UUID.randomUUID().toString());
-                contractEventMongo.setContractId(contractMongo.getId());
-                contractEventMongo.setDate(LocalDate.now());
-                contractEventMongo.setDescription("This is a random event ");
-                contractEventMongo.setType(randomEventType());
-                LOGGER.info("Returning event with id [{}] for contract id [{}]",contractEventMongo.getId(),contractEventMongo.getContractId());
-                return contractEventMongo;
-            }
+        Flux<ContractEventMongo> contractEventMongoFlux = Flux.fromStream(Stream.generate((() -> {
+            ContractEventMongo contractEventMongo = new ContractEventMongo();
+            contractEventMongo.setId(UUID.randomUUID().toString());
+            contractEventMongo.setContractId(contractMongo.getId());
+            contractEventMongo.setDate(LocalDate.now());
+            contractEventMongo.setDescription("This is a random event ");
+            contractEventMongo.setType(randomEventType());
+            LOGGER.info("Returning event with id [{}] for contract id [{}]",contractEventMongo.getId(),contractEventMongo.getContractId());
+            return contractEventMongo;
         })));
         return Flux.zip(duration,interval,contractEventMongoFlux).map(Tuple3::getT3);
     }
