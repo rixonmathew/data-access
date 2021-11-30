@@ -91,7 +91,7 @@ spring:
     hibernate:
       ddl-auto: validate
 server:
-  port: 9797
+  port: 9798
 
 logging:
   pattern:
@@ -126,7 +126,7 @@ spring:
     hibernate:
       ddl-auto: validate
 server:
-  port: 9797
+  port: 9799
 
 logging:
   pattern:
