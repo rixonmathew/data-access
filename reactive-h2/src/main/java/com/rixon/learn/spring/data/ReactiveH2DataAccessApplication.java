@@ -1,25 +1,21 @@
 package com.rixon.learn.spring.data;
 
-import io.r2dbc.spi.ConnectionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
-import org.springframework.core.io.ClassPathResource;
+import org.springframework.data.r2dbc.repository.config.EnableR2dbcRepositories;
 import org.springframework.http.MediaType;
-import org.springframework.r2dbc.connection.init.ConnectionFactoryInitializer;
-import org.springframework.r2dbc.connection.init.ResourceDatabasePopulator;
 import org.springframework.web.reactive.function.BodyExtractors;
 import org.springframework.web.reactive.function.server.RouterFunction;
 import org.springframework.web.reactive.function.server.ServerResponse;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -30,12 +26,16 @@ import static org.springframework.web.reactive.function.server.RouterFunctions.r
 import static org.springframework.web.reactive.function.server.ServerResponse.ok;
 
 @SpringBootApplication
+@EnableR2dbcRepositories
 public class ReactiveH2DataAccessApplication {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ReactiveH2DataAccessApplication.class);
 
-    @Autowired
-    private ReactiveH2Service reactiveH2Service;
+    private final ReactiveH2Service reactiveH2Service;
+
+    public ReactiveH2DataAccessApplication(ReactiveH2Service reactiveH2Service) {
+        this.reactiveH2Service = reactiveH2Service;
+    }
 
 
     @Bean
@@ -45,10 +45,9 @@ public class ReactiveH2DataAccessApplication {
                 .andRoute(GET("/contracts/id/{id}"),
                         request -> ok().body(reactiveContractRepository.findById(request.pathVariable("id")), ContractRH2.class))
                 .andRoute(GET("/contracts/assetidentifier/{assetIdentifier}"),
-                        request -> ok().body(reactiveContractRepository.findContractRH2ByAssetIdentifierIn(Arrays.asList(request.pathVariable("id"))), ContractRH2.class))
+                        request -> ok().body(reactiveContractRepository.findContractRH2ByAssetIdentifierIn(List.of(request.pathVariable("id"))), ContractRH2.class))
                 .andRoute(POST("/contracts").and(accept(MediaType.APPLICATION_JSON)), serverRequest -> {
                     Mono<ContractRH2> body = serverRequest.body(BodyExtractors.toMono(ContractRH2.class));
-                    reactiveContractRepository.saveAll(body);
                     return ok().body(reactiveContractRepository.saveAll(body),ContractRH2.class);
                 })
 				.andRoute(GET("/contracts/{id}/events"),
@@ -60,28 +59,38 @@ public class ReactiveH2DataAccessApplication {
     }
 
 
+
+
     @Bean
-    ConnectionFactoryInitializer initializer(ConnectionFactory connectionFactory) {
+    CommandLineRunner commandLineRunner(ReactiveContractRepository contractRepository,
+                                        ReactiveContractEventRepository reactiveContractEventRepository) {
+        return args -> {
+            LOGGER.info("Deleting all contracts");
+            contractRepository.deleteAll().subscribe(null,null,()-> LOGGER.info("Completed deleting contracts"));
+            long startTime=System.currentTimeMillis();
+            LOGGER.info("Creating mock contracts");
 
-        ConnectionFactoryInitializer initializer = new ConnectionFactoryInitializer();
-        initializer.setConnectionFactory(connectionFactory);
-        initializer.setDatabasePopulator(new ResourceDatabasePopulator(new ClassPathResource("schema.sql")));
-
-        return initializer;
+            contractRepository.saveAll(randomContracts(10_000L))
+                    .doOnComplete(()->LOGGER.info("Completed creating contracts in [{}]",System.currentTimeMillis()-startTime))
+                    .doOnError(throwable -> LOGGER.info("Got error creating contracts [{}]",throwable.getLocalizedMessage()))
+                    .subscribe(contractRH2 -> reactiveContractEventRepository.saveAll(randomEvents(contractRH2.getId()))
+                            .doOnError(throwable -> LOGGER.info("Got error creating events [{}]",throwable.getLocalizedMessage()))
+                            .subscribe());
+        };
     }
 
-
-    @Bean
-    CommandLineRunner commandLineRunner(ReactiveContractRepository contractRepository) {
-        return args -> {
-            contractRepository.deleteAll();
-            long startTime=System.currentTimeMillis();
-            contractRepository.saveAll(randomContracts(10_000L))
-                    .subscribe(null,null,()->{
-                        LOGGER.info("Completed creating contracts");
-                    });
-            LOGGER.info("Created contracts in [{}] ms",System.currentTimeMillis()-startTime);
-        };
+    private Flux<ContractEventRH2> randomEvents(String contractId) {
+        return Flux.fromStream(LongStream.range(0,10)
+                .mapToObj(index->{
+                    ContractEventRH2 contractEventRH2 = new ContractEventRH2();
+                    contractEventRH2.setId(UUID.randomUUID().toString());
+                    contractEventRH2.setContractId(contractId);
+                    contractEventRH2.setType("REPRICE");
+                    contractEventRH2.setEventDate(LocalDate.now());
+                    contractEventRH2.setQuantity(10);
+                    contractEventRH2.setEconomicChange(BigDecimal.TEN);
+                    return contractEventRH2;
+                }));
     }
 
     private List<ContractRH2> randomContracts(long count) {

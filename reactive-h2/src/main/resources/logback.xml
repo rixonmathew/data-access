@@ -6,19 +6,7 @@
             </pattern>
         </encoder>
     </appender>
-<!--    <appender name="SAVE-TO-FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">-->
-<!--        <file>/Users/rixonmathew/rixmbssd/logs/app_logs/h2data_access.log</file>-->
-<!--        <encoder class="net.logstash.logback.encoder.LogstashEncoder"/>-->
-<!--        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">-->
-<!--            <fileNamePattern>/Users/rixonmathew/rixmbssd/logs/app_logs/archived/h2data_access_%d{dd-MM-yyyy}_%i.log-->
-<!--            </fileNamePattern>-->
-<!--            <maxFileSize>10MB</maxFileSize>-->
-<!--            <maxHistory>10</maxHistory>-->
-<!--            <totalSizeCap>100MB</totalSizeCap>-->
-<!--        </rollingPolicy>-->
-<!--    </appender>-->
     <root level="info">
         <appender-ref ref="STDOUT"/>
-<!--        <appender-ref ref="SAVE-TO-FILE"/>-->
     </root>
 </configuration>

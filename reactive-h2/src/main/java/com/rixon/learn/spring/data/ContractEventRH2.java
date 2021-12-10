@@ -8,7 +8,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.Persistable;
 
 import java.math.BigDecimal;
-import java.util.Date;
+import java.time.LocalDate;
 
 @Data
 @AllArgsConstructor
@@ -17,17 +17,12 @@ import java.util.Date;
 public class ContractEventRH2 implements Persistable<String> {
 
     @Id
-    private String eventId;
+    private String id;
     private String contractId;
-    private Date eventDate;
+    private LocalDate eventDate;
     private String type;
     private BigDecimal economicChange;
     private Integer quantity;
-
-    @Override
-    public String getId() {
-        return eventId;
-    }
 
     @Override
     public boolean isNew() {
