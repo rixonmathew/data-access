@@ -11,7 +11,7 @@ cd to resources folder where data.cql is kept
 > docker run --rm --network cassandra -v "%CD%\data.cql:/scripts/data.cql" -e CQLSH_HOST=cassandra -e CQLSH_PORT=9042 nuvo/docker-cqlsh
 
 Interactive CQLSH 
-> docker run --rm -it --network cassandra nuvo/docker-cqlsh cqlsh cassandra 9042 --cqlversion='3.4.4'
+> _docker run --rm -it --network cassandra nuvo/docker-cqlsh cqlsh cassandra 9042 --cqlversion='3.4.5'_
 
 
 ## MacOS - cassandra via homebrew install (docker setup shown above will also work on M1 macs where arm image is not yet available)
