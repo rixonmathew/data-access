@@ -21,6 +21,18 @@ public class Account {
     @Column(length = 25, nullable = false)
     private BigDecimal balance;
 
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setType(AccountType type) {
+        this.type = type;
+    }
+
+    public void setBalance(BigDecimal balance) {
+        this.balance = balance;
+    }
+
     public Long getId() {
         return id;
     }
