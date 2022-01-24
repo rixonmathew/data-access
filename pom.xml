@@ -14,14 +14,14 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>2.6.1</version>
+		<version>2.6.3</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-		<java.version>11</java.version>
+		<java.version>17</java.version>
 		<!-- Use most recent failsafe and surefire plugin versions -->
 		<maven-failsafe-plugin.version>2.22.0</maven-failsafe-plugin.version>
 		<maven-surefire-plugin.version>2.22.0</maven-surefire-plugin.version>
@@ -39,7 +39,9 @@
 		<module>oracle19c</module>
 		<module>apache-ignite</module>
 		<module>gemfire</module>
-    </modules>
+		<module>cockroachdb</module>
+		<module>yugabytedb</module>
+	</modules>
 
 
 	<build>

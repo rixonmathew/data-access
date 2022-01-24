@@ -1,0 +1,48 @@
+spring:
+  config:
+    activate:
+      on-profile: local-docker-insecure
+
+########################
+# Spring boot properties
+# http://docs.spring.io/spring-boot/docs/current/reference/html/common-application-properties.html
+########################
+
+  output:
+    ansi:
+      enabled: ALWAYS
+
+  liquibase:
+    change-log: classpath:/db/changelog/changelog-master.xml
+    default-schema:
+    drop-first: false
+    contexts: crdb
+    enabled: true
+
+  datasource:
+    url: jdbc:postgresql://rixmacmini2011:26257/roach_data?sslmode=disable
+    driver-class-name: org.postgresql.Driver
+    username: rixon
+    password:
+    hikari:
+      connection-test-query: SELECT 1
+
+  jpa:
+    open-in-view: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.CockroachDB201Dialect
+    show-sql: false
+server:
+  port: 9700
+
+logging:
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} %-5level %logger{36} - %msg%n"
+    level:
+      - org.hibernate.SQL: error
+---
+spring:
+  config:
+    activate:
+      on-profile: cloud-cockroach

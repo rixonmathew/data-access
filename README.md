@@ -12,4 +12,4 @@ With data persistence option
 
 
 Connect via client
-> docker exec -it yugabyte /home/yugabyte/bin/ysqlsh --echo-queries
+> docker exec -it yugabyte /home/yugabyte/bin/ysqlsh --echo-queries`    

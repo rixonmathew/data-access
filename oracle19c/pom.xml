@@ -13,8 +13,7 @@
     <description>Demo project for Spring Boot</description>
 
     <properties>
-        <java.version>11</java.version>
-        <oracle.client.version>21.3.0.0</oracle.client.version>
+       <oracle.client.version>21.3.0.0</oracle.client.version>
     </properties>
 
     <dependencies>

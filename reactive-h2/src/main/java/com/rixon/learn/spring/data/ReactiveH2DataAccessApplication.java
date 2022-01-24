@@ -52,7 +52,7 @@ public class ReactiveH2DataAccessApplication {
                 })
 				.andRoute(GET("/contracts/{id}/events"),
                 request ->ok()
-                        .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                        .contentType(MediaType.APPLICATION_NDJSON)
                         .body(reactiveContractRepository.findById(request.pathVariable("id"))
                                 .flatMapMany(reactiveH2Service::events), ContractEventRH2.class));
 
