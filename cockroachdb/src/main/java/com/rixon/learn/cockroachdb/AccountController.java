@@ -56,7 +56,7 @@ public class AccountController {
     @GetMapping(value = "/account/{id}")
     @Transactional(propagation = REQUIRES_NEW)
     public HttpEntity<AccountModel> getAccount(@PathVariable("id") Long accountId) {
-        return new ResponseEntity<>(accountModelAssembler().toModel(accountRepository.getOne(accountId)),
+        return new ResponseEntity<>(accountModelAssembler().toModel(accountRepository.getById(accountId)),
                 HttpStatus.OK);
     }
 
