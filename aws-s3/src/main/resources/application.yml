@@ -1,0 +1,23 @@
+server:
+  port: 8787
+spring:
+  application:
+    name: AWS S3 Integration from spring boot
+  info:
+    build:
+      encoding: UTF-8
+management:
+  endpoints:
+    jmx:
+      exposure:
+        include: "health,info,mappings"
+    web:
+      exposure:
+        include: "health,info,mappings"
+  info:
+    defaults:
+      enabled: true
+    build:
+      enabled: true
+    env:
+      enabled: true

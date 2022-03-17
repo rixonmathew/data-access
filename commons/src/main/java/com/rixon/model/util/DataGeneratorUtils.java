@@ -43,7 +43,7 @@ public class DataGeneratorUtils {
         instrument.setId(id);
         instrument.setName("AB CORP SHARES");
         instrument.setType("BOND");
-        instrument.setMetadata("{'inceptionDate':'01-Jan-1908','rating':'BB+'}");
+        instrument.setMetadata("{'inceptionDate':'01-Jan-1908'}");
         return instrument;
     }
 }

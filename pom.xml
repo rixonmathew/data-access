@@ -43,6 +43,8 @@
 		<module>gemfire</module>
 		<module>cockroachdb</module>
 		<module>yugabytedb</module>
+		<module>neo4j</module>
+		<module>aws-s3</module>
 	</modules>
 
 
