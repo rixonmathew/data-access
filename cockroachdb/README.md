@@ -34,3 +34,34 @@ docker exec -it roach1 ./cockroach workload run movr --duration=5m 'postgresql:/
 
 
 ## Starting a secure cluster running on mac mini 2011
+cockroach cert create-ca --certs-dir=certs --ca-key=my-safe-directory/ca.key
+cockroach cert create-node localhost $(hostname) --certs-dir=certs --ca-key=my-safe-directory/ca.key
+cockroach cert create-client rixon --certs-dir=certs --ca-key=my-safe-directory/ca.key
+cockroach start --certs-dir=certs --store=node1 --listen-addr=localhost:26257 --http-addr=localhost:8080 --join=localhost:26257,localhost:26258,localhost:26259 --background
+cockroach start --certs-dir=certs --store=node2 --listen-addr=localhost:26258 --http-addr=localhost:8081 --join=localhost:26257,localhost:26258,localhost:26259 --background
+cockroach start --certs-dir=certs --store=node3 --listen-addr=localhost:26259 --http-addr=localhost:8082 --join=localhost:26257,localhost:26258,localhost:26259 --background
+cockroach init --certs-dir=certs --host=localhost:26257
+cockroach cert create-client root --certs-dir=certs --ca-key=my-safe-directory/ca.key
+cockroach init --certs-dir=certs --host=localhost:26257
+grep 'node starting' node1/logs/cockroach.log -A 11
+grep 'node starting' node2/logs/cockroach.log -A 11
+grep 'node starting' node3/logs/cockroach.log -A 11
+cockroach sql --certs-dir=certs --host=localhost:26257
+ps -aef | grep cockroach
+cockroach
+cockroach node list
+cockroach node ls
+cockroach node ls --certs-dir=certs
+cockroach node status --certs-dir=certs
+cockroach
+cockroach quit --certs-dir=certs --host=localhost:26257
+cockroach quit --certs-dir=certs --host=localhost:26258
+cockroach quit --certs-dir=certs --host=localhost:26259
+cockroach node drain --certs-dir=certs
+cockroach node ls --certs-dir=certs
+ps -aef | grep cockroach
+cockroach node drain --certs-dir=certs --host=localhost:26259
+ps -aef | grep cockroach
+ps -aef | grep cockroach
+cd cockroach-data/
+cockroach --version
