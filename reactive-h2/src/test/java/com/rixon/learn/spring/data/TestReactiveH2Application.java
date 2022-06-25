@@ -11,6 +11,5 @@ public class TestReactiveH2Application {
     @DisplayName("Test loading of context")
     public void contextLoads() {
 
-
     }
 }

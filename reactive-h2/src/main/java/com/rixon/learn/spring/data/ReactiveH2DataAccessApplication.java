@@ -69,8 +69,7 @@ public class ReactiveH2DataAccessApplication {
             contractRepository.deleteAll().subscribe(null,null,()-> LOGGER.info("Completed deleting contracts"));
             long startTime=System.currentTimeMillis();
             LOGGER.info("Creating mock contracts");
-
-            contractRepository.saveAll(randomContracts(10_000L))
+            contractRepository.saveAll(randomContracts())
                     .doOnComplete(()->LOGGER.info("Completed creating contracts in [{}]",System.currentTimeMillis()-startTime))
                     .doOnError(throwable -> LOGGER.info("Got error creating contracts [{}]",throwable.getLocalizedMessage()))
                     .subscribe(contractRH2 -> reactiveContractEventRepository.saveAll(randomEvents(contractRH2.getId()))
@@ -93,8 +92,8 @@ public class ReactiveH2DataAccessApplication {
                 }));
     }
 
-    private List<ContractRH2> randomContracts(long count) {
-        return LongStream.range(0,count)
+    private List<ContractRH2> randomContracts() {
+        return LongStream.range(0, 100)
                 .mapToObj(index->{
                     ContractRH2 contract = new ContractRH2();
                     contract.setId(UUID.randomUUID().toString());
