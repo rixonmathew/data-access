@@ -29,9 +29,9 @@
 	<modules>
 		<module>commons</module>
 		<module>h2</module>
-		<module>mongo</module>
+<!--		<module>mongo</module>-->
 		<module>cassandra</module>
-		<module>reactive-mongo</module>
+<!--		<module>reactive-mongo</module>-->
 		<module>reactive-cassandra</module>
 		<module>hazelcast-server</module>
         <module>reactive-h2</module>
