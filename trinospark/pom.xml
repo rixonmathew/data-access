@@ -37,6 +37,11 @@
             <artifactId>trino-jdbc</artifactId>
             <version>389</version>
         </dependency>
+        <dependency>
+            <groupId>org.javatuples</groupId>
+            <artifactId>javatuples</artifactId>
+            <version>1.2</version>
+        </dependency>
         <!-- Provide JUnit 5 API -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
