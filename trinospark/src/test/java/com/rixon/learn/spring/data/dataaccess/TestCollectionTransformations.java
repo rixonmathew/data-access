@@ -1,10 +1,12 @@
 package com.rixon.learn.spring.data.dataaccess;
 
 import org.junit.jupiter.api.Test;
+import org.openjdk.jol.info.ClassLayout;
+import org.openjdk.jol.info.GraphLayout;
+import org.openjdk.jol.vm.VM;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.util.Pair;
-import reactor.util.function.Tuples;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -63,29 +65,37 @@ public class TestCollectionTransformations {
 
     @Test
     public void testTradeTransformations() {
-
-        List<Pair<LocalDate, Trade>> collect = mockTradeList().parallelStream().collect(Collectors.groupingBy(Trade::getTradeDate))
+//        LOGGER.info("{}", VM.current().details());
+        List<Trade> allTrades = mockTradeList();
+//        LOGGER.info("Shallow List size [{}] bytes",VM.current().sizeOf(allTrades));
+//        LOGGER.info("Deep size [{}]", GraphLayout.parseInstance(allTrades).totalSize());
+        List<Pair<LocalDate, Trade>> collect = allTrades
+                .stream()
+//                .parallelStream()
+                .collect(Collectors.groupingBy(Trade::getTradeDate))
                 .entrySet()
+//                .stream()
                 .parallelStream()
 //                .peek(e -> LOGGER.info("[{}]", e.getKey()))
                 .map(e -> {
-                    LOGGER.info("Finding max for date [{}]",e.getKey());
+//                    LOGGER.info("Finding max for date [{}] from list of size [{}]",e.getKey(),e.getValue().size());
                     List<Trade> trades = e.getValue();
                     Trade max = Collections.max(trades, Comparator.comparing(Trade::getValue));
+//                    e.getValue().sort(Comparator.comparing(Trade::getValue));
                     return Pair.of(e.getKey(), max);
                 }).toList();
-//        collect.forEach(localDateTradePair -> LOGGER.info("Date {} Value {}",localDateTradePair.getFirst(),localDateTradePair.getSecond()));
+        collect.parallelStream().peek(localDateTradePair -> LOGGER.info("Date {} Value {}",localDateTradePair.getFirst(),localDateTradePair.getSecond())).findFirst();
     }
 
     private List<Trade> mockTradeList() {
         Random random = new Random();
-        return IntStream.rangeClosed(1,10000000)
+        return IntStream.rangeClosed(1,1000000)
                 .mapToObj(i->{
                     Trade trade = new Trade();
                     trade.setId(UUID.randomUUID().toString());
-                    trade.setTradeDate(LocalDate.now().minusDays(random.nextLong(365)));
+                    trade.setTradeDate(LocalDate.now().minusDays(random.nextLong(30)));
                     trade.setAccount(accounts[random.nextInt(accounts.length)]);
-                    trade.setTicket(tickers[random.nextInt(tickers.length)]);
+                    trade.setTicker(tickers[random.nextInt(tickers.length)]);
                     trade.setValue(BigDecimal.TEN.multiply(new BigDecimal(random.nextInt(100000))));
                     return trade;
                 }).collect(Collectors.toList());

@@ -9,7 +9,7 @@ import java.time.LocalDate;
 public class Trade {
     private String id;
     private String account;
-    private String ticket;
+    private String ticker;
     private LocalDate tradeDate;
     private BigDecimal value;
 }
