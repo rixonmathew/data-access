@@ -1,9 +1,6 @@
 package com.rixon.learn.spring.data.dataaccess;
 
 import org.junit.jupiter.api.Test;
-import org.openjdk.jol.info.ClassLayout;
-import org.openjdk.jol.info.GraphLayout;
-import org.openjdk.jol.vm.VM;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.util.Pair;
@@ -21,14 +18,14 @@ public class TestCollectionTransformations {
     private final static Logger LOGGER = LoggerFactory.getLogger(TestCollectionTransformations.class);
 
 
-    String[] departments = {"IT","SALES","HR","MARKETING","LEGAL","R&D"};
-    String[] accounts = {"ACC1","ACC2","ACC3"};
-    String[] tickers = {"APPL","GOOG","IBM","FBOOK"};
+    String[] departments = {"IT", "SALES", "HR", "MARKETING", "LEGAL", "R&D"};
+    String[] accounts = {"ACC1", "ACC2", "ACC3"};
+    String[] tickers = {"APPL", "GOOG", "IBM", "FBOOK"};
 
     @Test
     public void testSecondHighestEmployeePerDepartment() {
         List<Employee> employeeList = mockEmployeeList();
-        Map<String,Employee> employeesWithSecondHighestSalary = transformList(employeeList);
+        Map<String, Employee> employeesWithSecondHighestSalary = transformList(employeeList);
         employeesWithSecondHighestSalary.forEach((key, value) -> {
             int numberOfEmployeesWithHigherSalary = 0;
             for (Employee em : employeeList) {
@@ -44,8 +41,8 @@ public class TestCollectionTransformations {
 
     private List<Employee> mockEmployeeList() {
         Random random = new Random();
-        return IntStream.rangeClosed(1,100000000)
-                .mapToObj(i->{
+        return IntStream.rangeClosed(1, 100)
+                .mapToObj(i -> {
                     Employee employee = new Employee();
                     employee.setDept(departments[random.nextInt(departments.length)]);
                     employee.setSalary(BigDecimal.TEN.multiply(BigDecimal.valueOf(random.nextInt(100))));
@@ -55,10 +52,10 @@ public class TestCollectionTransformations {
     }
 
     private Map<String, Employee> transformList(List<Employee> employeeList) {
-         Map<String,List<Employee>> grouped  = employeeList.stream()
+        Map<String, List<Employee>> grouped = employeeList.stream()
                 .collect(Collectors.groupingBy(Employee::getDept));
         grouped.forEach((s, employees) -> employees.sort((o1, o2) -> o2.getSalary().compareTo(o1.getSalary())));
-        Map<String,Employee> secondHighestSalary = new HashMap<>();
+        Map<String, Employee> secondHighestSalary = new HashMap<>();
         grouped.forEach((key, value) -> secondHighestSalary.put(key, value.get(1)));
         return secondHighestSalary;
     }
@@ -84,13 +81,15 @@ public class TestCollectionTransformations {
 //                    e.getValue().sort(Comparator.comparing(Trade::getValue));
                     return Pair.of(e.getKey(), max);
                 }).toList();
-        collect.parallelStream().peek(localDateTradePair -> LOGGER.info("Date {} Value {}",localDateTradePair.getFirst(),localDateTradePair.getSecond())).findFirst();
+        Optional<Pair<LocalDate, Trade>> first = collect.parallelStream().peek(localDateTradePair -> LOGGER.info("Date {} Value {}", localDateTradePair.getFirst(), localDateTradePair.getSecond())).findFirst();
+        first.ifPresent((s)->LOGGER.info("{}",s));
+
     }
 
     private List<Trade> mockTradeList() {
         Random random = new Random();
-        return IntStream.rangeClosed(1,1000000)
-                .mapToObj(i->{
+        return IntStream.rangeClosed(1, 100)
+                .mapToObj(i -> {
                     Trade trade = new Trade();
                     trade.setId(UUID.randomUUID().toString());
                     trade.setTradeDate(LocalDate.now().minusDays(random.nextLong(30)));
