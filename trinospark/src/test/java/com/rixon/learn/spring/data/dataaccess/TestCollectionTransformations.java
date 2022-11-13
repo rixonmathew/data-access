@@ -21,6 +21,7 @@ public class TestCollectionTransformations {
     String[] departments = {"IT", "SALES", "HR", "MARKETING", "LEGAL", "R&D"};
     String[] accounts = {"ACC1", "ACC2", "ACC3"};
     String[] tickers = {"APPL", "GOOG", "IBM", "FBOOK"};
+    String[] states = {"NY", "NJ", "MA","MN","OK"};
 
     @Test
     public void testSecondHighestEmployeePerDepartment() {
@@ -99,4 +100,41 @@ public class TestCollectionTransformations {
                     return trade;
                 }).collect(Collectors.toList());
     }
+
+    @Test
+    public void testOrderListTransformation() {
+        List<Order> orders = mockOrderList();
+        Map<String, List<Order>> ordersByState = orders.parallelStream()
+                .collect(Collectors.groupingBy(Order::getState));
+
+        Map<String, List<Order>> orderByStateAndDate = orders.parallelStream().collect(Collectors.groupingBy(order -> String.format("%s:%s", order.getState(), order.getOrderDate())));
+
+        ordersByState.forEach((s, orders1) -> LOGGER.info("State [{}] and order values [{}]",s,orders1.stream().map(Order::getValue).sorted(Comparator.reverseOrder()).limit(10).collect(Collectors.toList())));
+
+        orderByStateAndDate.forEach((s, orders1) -> LOGGER.info("State and Date [{}] and order values [{}]",s,orders1.stream().map(Order::getValue).sorted(Comparator.reverseOrder()).limit(10).collect(Collectors.toList())));
+
+        Map<String, List<Order>> highestOrdersPerState = ordersByState.entrySet()
+                .parallelStream()
+                .map(entry -> Map.of(entry.getKey(), entry.getValue().stream().sorted(Comparator.comparing(Order::getValue).reversed()).limit(3).toList()))
+                .flatMap(e -> e.entrySet().stream())
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+
+        highestOrdersPerState.forEach((s, orders1) -> LOGGER.info("State [{}] and order Values [{}]",s,orders1.stream().map(Order::getValue).collect(Collectors.toList())));
+
+    }
+
+    private List<Order> mockOrderList() {
+        Random random = new Random();
+        return IntStream.rangeClosed(1, 100)
+                .mapToObj(i -> {
+                    Order order = new Order();
+                    order.setOrderId(UUID.randomUUID().toString());
+                    order.setCustomerId(UUID.randomUUID().toString());
+                    order.setOrderDate(LocalDate.now().minusDays(random.nextLong(30)));
+                    order.setState(states[random.nextInt(states.length)]);
+                    order.setValue(BigDecimal.TEN.multiply(new BigDecimal(random.nextInt(100000))));
+                    return order;
+                }).collect(Collectors.toList());
+    }
+
 }
