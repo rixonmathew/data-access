@@ -65,12 +65,10 @@ public class TestCollectionTransformations {
     public void testTradeTransformations() {
 //        LOGGER.info("{}", VM.current().details());
         List<Trade> allTrades = mockTradeList();
-//        LOGGER.info("Shallow List size [{}] bytes",VM.current().sizeOf(allTrades));
-//        LOGGER.info("Deep size [{}]", GraphLayout.parseInstance(allTrades).totalSize());
         List<Pair<LocalDate, Trade>> collect = allTrades
                 .stream()
 //                .parallelStream()
-                .collect(Collectors.groupingBy(Trade::getTradeDate))
+                .collect(Collectors.groupingBy(Trade::tradeDate))
                 .entrySet()
 //                .stream()
                 .parallelStream()
@@ -78,7 +76,7 @@ public class TestCollectionTransformations {
                 .map(e -> {
 //                    LOGGER.info("Finding max for date [{}] from list of size [{}]",e.getKey(),e.getValue().size());
                     List<Trade> trades = e.getValue();
-                    Trade max = Collections.max(trades, Comparator.comparing(Trade::getValue));
+                    Trade max = Collections.max(trades, Comparator.comparing(Trade::value));
 //                    e.getValue().sort(Comparator.comparing(Trade::getValue));
                     return Pair.of(e.getKey(), max);
                 }).toList();
@@ -90,15 +88,11 @@ public class TestCollectionTransformations {
     private List<Trade> mockTradeList() {
         Random random = new Random();
         return IntStream.rangeClosed(1, 100)
-                .mapToObj(i -> {
-                    Trade trade = new Trade();
-                    trade.setId(UUID.randomUUID().toString());
-                    trade.setTradeDate(LocalDate.now().minusDays(random.nextLong(30)));
-                    trade.setAccount(accounts[random.nextInt(accounts.length)]);
-                    trade.setTicker(tickers[random.nextInt(tickers.length)]);
-                    trade.setValue(BigDecimal.TEN.multiply(new BigDecimal(random.nextInt(100000))));
-                    return trade;
-                }).collect(Collectors.toList());
+                .mapToObj(i -> new Trade(UUID.randomUUID().toString(),accounts[random.nextInt(accounts.length)],
+                        tickers[random.nextInt(tickers.length)],
+                        LocalDate.now().minusDays(random.nextLong(30)),
+                        BigDecimal.TEN.multiply(new BigDecimal(random.nextInt(100000)))
+                        )).collect(Collectors.toList());
     }
 
     @Test

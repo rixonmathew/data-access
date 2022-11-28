@@ -51,8 +51,7 @@ public class ReactiveCassandraApplication {
 	CommandLineRunner commandLineRunner(ContractRepository contractRepository) {
 		return args -> {
 			contractRepository.deleteAll().doOnSuccess(aVoid -> LOGGER.info("Deleted all contracts")).subscribe();
-			Flux<ContractCassandra> contractCassandraFlux = contractRepository.saveAll(randomContracts(10000));
-			contractCassandraFlux.subscribeOn(Schedulers.elastic());
+			Flux<ContractCassandra> contractCassandraFlux = contractRepository.saveAll(randomContracts(10000)).subscribeOn(Schedulers.boundedElastic());
 			contractCassandraFlux.doOnComplete(() -> LOGGER.info("Completed creating contracts")).subscribe();
 		};
 	}

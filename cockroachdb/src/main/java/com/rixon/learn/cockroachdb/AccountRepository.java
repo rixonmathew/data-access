@@ -1,10 +1,11 @@
 package com.rixon.learn.cockroachdb;
 
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.*;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.persistence.LockModeType;
+
 import java.math.BigDecimal;
 
 import static org.springframework.transaction.annotation.Propagation.MANDATORY;
