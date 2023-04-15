@@ -40,7 +40,7 @@ public class S3Accessor {
 //        List<String> headers = Arrays.asList("id","type","name","metadata");
         FileWriter fileWriter;
         try {
-            Path tempFile = Files.createTempFile(Path.of("D:\\tmp"),"instruments", ".csv");
+            Path tempFile = Files.createTempFile(Path.of("/tmp"),"instruments", ".csv");
             fileWriter = new FileWriter(tempFile.toFile());
             CSVPrinter csvPrinter = new CSVPrinter(fileWriter, CSVFormat.DEFAULT);
 //            csvPrinter.printRecord(headers);

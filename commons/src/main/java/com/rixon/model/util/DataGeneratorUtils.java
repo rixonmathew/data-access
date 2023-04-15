@@ -40,7 +40,7 @@ public class DataGeneratorUtils {
 
     private static  Instrument randomInstrument(long id) {
         Instrument instrument = new Instrument();
-        instrument.setId(id);
+//        instrument.setId(id);
         instrument.setName("AB CORP SHARES");
         instrument.setType("BOND");
         instrument.setMetadata("{'inceptionDate':'01-Jan-1908'}");

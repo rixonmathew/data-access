@@ -107,7 +107,7 @@ spring:
   datasource:
     username: rixon
     password: OraclePass#1
-    url: jdbc:oracle:thin:@clouddb19c_high?TNS_ADMIN=D:\\oracle\\Wallet_CLOUDDB19C
+    url: jdbc:oracle:thin:@clouddb202319c_high?TNS_ADMIN=/Users/rixonmathew/Downloads/Wallet_CLOUDDB202319C
     driver-class-name: oracle.jdbc.OracleDriver
     hikari:
       connection-timeout: 60000
@@ -121,10 +121,11 @@ spring:
       idle-timeout: 120000
   jpa:
     database-platform: org.hibernate.dialect.Oracle12cDialect
-
     show-sql: false
     hibernate:
       ddl-auto: validate
+    generate-ddl: true
+
 server:
   port: 9799
 
