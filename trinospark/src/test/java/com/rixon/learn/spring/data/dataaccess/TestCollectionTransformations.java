@@ -21,7 +21,7 @@ public class TestCollectionTransformations {
     String[] departments = {"IT", "SALES", "HR", "MARKETING", "LEGAL", "R&D"};
     String[] accounts = {"ACC1", "ACC2", "ACC3"};
     String[] tickers = {"APPL", "GOOG", "IBM", "FBOOK"};
-    String[] states = {"NY", "NJ", "MA","MN","OK"};
+    String[] states = {"NY", "NJ", "MA","MN","OK","WA","NH","TX","RI","VE"};
 
     @Test
     public void testSecondHighestEmployeePerDepartment() {
@@ -87,7 +87,7 @@ public class TestCollectionTransformations {
 
     private List<Trade> mockTradeList() {
         Random random = new Random();
-        return IntStream.rangeClosed(1, 100)
+        return IntStream.rangeClosed(1, 1000)
                 .mapToObj(i -> new Trade(UUID.randomUUID().toString(),accounts[random.nextInt(accounts.length)],
                         tickers[random.nextInt(tickers.length)],
                         LocalDate.now().minusDays(random.nextLong(30)),
@@ -119,7 +119,7 @@ public class TestCollectionTransformations {
 
     private List<Order> mockOrderList() {
         Random random = new Random();
-        return IntStream.rangeClosed(1, 100)
+        return IntStream.rangeClosed(1, 1000)
                 .mapToObj(i -> {
                     Order order = new Order();
                     order.setOrderId(UUID.randomUUID().toString());
