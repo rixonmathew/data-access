@@ -107,7 +107,7 @@ spring:
   datasource:
     username: rixon
     password: OraclePass#1
-    url: jdbc:oracle:thin:@clouddb202319c_high?TNS_ADMIN=/Users/rixonmathew/Downloads/Wallet_CLOUDDB202319C
+    url: jdbc:oracle:thin:@rixoracloud2023_high?TNS_ADMIN=/Users/rixonmathew/Downloads/Wallet_RIXORACLOUD2023
     driver-class-name: oracle.jdbc.OracleDriver
     hikari:
       connection-timeout: 60000
