@@ -43,7 +43,6 @@
 		<module>neo4j</module>
 		<module>aws-s3</module>
 		<module>trinospark</module>
-
 	</modules>
 
 
