@@ -1,7 +1,7 @@
 package com.rixon.learn.spring.data;
 
-import com.rixon.learn.spring.data.models.Movie;
-import com.rixon.learn.spring.data.models.Person;
+import com.rixon.learn.spring.data.models.MovieRecord;
+import com.rixon.learn.spring.data.models.PersonRecord;
 import com.rixon.learn.spring.data.repository.MovieRepository;
 import com.rixon.learn.spring.data.repository.PersonRepository;
 import org.slf4j.Logger;
@@ -29,11 +29,11 @@ public class Neo4JDataAccessApplication {
     @Bean CommandLineRunner demo(MovieRepository movieRepository, PersonRepository personRepository){
         return args -> {
             LOGGER.info("Querying movies");
-            List<Movie> allMovies = movieRepository.findAll();
+            List<MovieRecord> allMovies = movieRepository.findAll();
             LOGGER.info("Found [{}] movies",allMovies.size());
 
             LOGGER.info("Querying persons");
-            List<Person> allPersons = personRepository.findAll();
+            List<PersonRecord> allPersons = personRepository.findAll();
             LOGGER.info("Found [{}] persons",allPersons.size());
         };
     }
