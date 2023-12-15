@@ -26,12 +26,18 @@ public class Neo4JDataAccessApplication {
         SpringApplication.run(Neo4JDataAccessApplication.class, args);
     }
 
+    /**
+     * This method is a demo method that queries movies and persons using the provided MovieRepository and PersonRepository.
+     *
+     * @param movieRepository The MovieRepository used to query the movies.
+     * @param personRepository The PersonRepository used to query the persons.
+     * @return The CommandLineRunner that executes the demo logic.
+     */
     @Bean CommandLineRunner demo(MovieRepository movieRepository, PersonRepository personRepository){
         return args -> {
             LOGGER.info("Querying movies");
             List<MovieRecord> allMovies = movieRepository.findAll();
             LOGGER.info("Found [{}] movies",allMovies.size());
-
             LOGGER.info("Querying persons");
             List<PersonRecord> allPersons = personRepository.findAll();
             LOGGER.info("Found [{}] persons",allPersons.size());
