@@ -18,7 +18,6 @@ spring:
         "[v$session.program]": data-access-tests
       idle-timeout: 120000
   jpa:
-    database-platform: org.hibernate.dialect.Oracle12cDialect
     show-sql: false
     hibernate:
       ddl-auto: validate
