@@ -1,7 +1,7 @@
 # cockroachdb
 
-Accessing Data from Cockroachdba
-
+Accessing Data from Cockroachdb
+```shell
 ## Starting cockroachdb cluster in docker insecure mode
 # Source https://www.cockroachlabs.com/docs/v21.2/start-a-local-cluster-in-docker-linux
 # Create a network
@@ -30,10 +30,11 @@ docker exec -it roach1 ./cockroach sql --insecure
 docker exec -it roach1 ./cockroach workload init movr 'postgresql://root@roach1:26257?sslmode=disable'
 
 docker exec -it roach1 ./cockroach workload run movr --duration=5m 'postgresql://root@roach1:26257?sslmode=disable'
-
+```
 
 
 ## Starting a secure cluster running on mac mini 2011
+```shell
 cockroach cert create-ca --certs-dir=certs --ca-key=my-safe-directory/ca.key
 cockroach cert create-node localhost $(hostname) --certs-dir=certs --ca-key=my-safe-directory/ca.key
 cockroach cert create-client rixon --certs-dir=certs --ca-key=my-safe-directory/ca.key
@@ -65,3 +66,4 @@ ps -aef | grep cockroach
 ps -aef | grep cockroach
 cd cockroach-data/
 cockroach --version
+```
