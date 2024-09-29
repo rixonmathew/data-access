@@ -16,7 +16,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>3.3.3</version>
+		<version>3.3.4</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 
@@ -31,9 +31,7 @@
 	<modules>
 		<module>commons</module>
 		<module>h2</module>
-<!--		<module>mongo</module>-->
 		<module>cassandra</module>
-<!--		<module>reactive-mongo</module>-->
 		<module>reactive-cassandra</module>
 		<module>hazelcast-server</module>
         <module>reactive-h2</module>
@@ -61,7 +59,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
-				<version>3.2.5</version>
+				<version>3.3.0</version>
 				<configuration>
 					<argLine>--add-exports java.base/sun.nio.ch=ALL-UNNAMED</argLine>
 				</configuration>
@@ -69,7 +67,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-failsafe-plugin</artifactId>
-				<version>3.2.5</version>
+				<version>3.3.0</version>
 				<configuration>
 					<argLine>--add-exports java.base/sun.nio.ch=ALL-UNNAMED</argLine>
 				</configuration>
