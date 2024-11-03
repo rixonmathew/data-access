@@ -61,10 +61,7 @@ public class Oracle19cApplication {
             } else {
                 LOGGER.info("Found {} instruments. skipping instrument creation",count);
             }
-
         };
     }
-
-
 }
 
