@@ -4,7 +4,7 @@ spring:
       on-profile: oracle-cloud-19c
   datasource:
     username: rixon
-    password: OraclePass#1
+    password: wappit-xaVpop-fimqi9
     url: jdbc:oracle:thin:@rixoracloud2023_high?TNS_ADMIN=/Users/rixonmathew/Downloads/Wallet_RIXORACLOUD2023
     driver-class-name: oracle.jdbc.OracleDriver
     hikari:
@@ -22,6 +22,9 @@ spring:
     hibernate:
       ddl-auto: validate
     generate-ddl: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.OracleDialect
 
 server:
   port: 9799
