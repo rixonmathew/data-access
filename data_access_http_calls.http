@@ -1,2 +1,8 @@
 ### Reactive H2 All Contracts
 GET localhost:9596/contracts
+
+### Oracle Get instruments
+GET http://rixm1mini:9799/instruments
+
+### Oracle Get Single instrument
+GET http://rixm1mini:9799/instruments/8950
