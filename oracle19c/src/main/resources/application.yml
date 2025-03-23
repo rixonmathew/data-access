@@ -5,7 +5,7 @@ spring:
   datasource:
     username: rixon
     password: wappit-xaVpop-fimqi9
-    url: jdbc:oracle:thin:@rixoracloud2023_high?TNS_ADMIN=/Users/rixonmathew/Downloads/Wallet_RIXORACLOUD2023
+    url: jdbc:oracle:thin:@rixoracloud2023_high?TNS_ADMIN=/Users/rixonmathew/apps/oracle/db_cloud/Wallet_RIXORACLOUD2023
     driver-class-name: oracle.jdbc.OracleDriver
     hikari:
       connection-timeout: 60000
