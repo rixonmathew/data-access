@@ -1,13 +1,15 @@
 package com.rixon.learn.spring.data.dynamodb.service;
 
 import com.rixon.learn.spring.data.dynamodb.config.TestConfig;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
-import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
-import software.amazon.awssdk.services.dynamodb.model.ResourceNotFoundException;
+import org.springframework.test.context.ActiveProfiles;
+import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
+import software.amazon.awssdk.services.dynamodb.model.*;
 
 import java.util.Map;
 import java.util.UUID;
@@ -16,10 +18,14 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 @Import(TestConfig.class)
+@ActiveProfiles("test")
 class DynamoDbServiceTest {
 
     @Autowired
     private DynamoDbService dynamoDbService;
+
+    @Autowired
+    private DynamoDbClient dynamoDbClient;
 
     private String tableName;
 
@@ -27,6 +33,37 @@ class DynamoDbServiceTest {
     void setUp() {
         tableName = "test_table_" + UUID.randomUUID().toString().replace("-", "");
         dynamoDbService.createTable(tableName);
+        waitForTableToBeActive(tableName);
+    }
+
+    @AfterEach
+    void tearDown() {
+        try {
+            dynamoDbClient.deleteTable(DeleteTableRequest.builder()
+                    .tableName(tableName)
+                    .build());
+        } catch (ResourceNotFoundException ignored) {
+            // Table might not exist, which is fine
+        }
+    }
+
+    private void waitForTableToBeActive(String tableName) {
+        try {
+            DescribeTableRequest request = DescribeTableRequest.builder()
+                    .tableName(tableName)
+                    .build();
+
+            while (true) {
+                DescribeTableResponse response = dynamoDbClient.describeTable(request);
+                if (response.table().tableStatus() == TableStatus.ACTIVE) {
+                    break;
+                }
+                Thread.sleep(500);
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Interrupted while waiting for table to be active", e);
+        }
     }
 
     @Test
@@ -64,7 +101,7 @@ class DynamoDbServiceTest {
     @Test
     void shouldThrowExceptionForNonExistentTable() {
         // When/Then
-        assertThrows(ResourceNotFoundException.class, 
-            () -> dynamoDbService.getItem("non-existent-table", "test-id"));
+        assertThrows(ResourceNotFoundException.class,
+                () -> dynamoDbService.getItem("non-existent-table", "test-id"));
     }
 }
