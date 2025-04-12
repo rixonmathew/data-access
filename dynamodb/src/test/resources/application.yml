@@ -1,0 +1,6 @@
+spring:
+  application:
+    name: dynamodb-demo-test
+
+server:
+  port: 0

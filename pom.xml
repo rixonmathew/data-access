@@ -41,6 +41,7 @@
 		<module>aws-s3</module>
 		<module>trinospark</module>
 		<module>kuzudb</module>
+		<module>dynamodb</module>
 	</modules>
 
 	<build>
