@@ -1,0 +1,27 @@
+server:
+  port: 9597
+
+spring:
+  r2dbc:
+    host: localhost
+    port: 5432
+    database: postgres
+    username: postgres
+    password: postgres
+    
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:schema.sql
+
+logging:
+  level:
+    org.springframework.data.r2dbc: DEBUG
+    io.r2dbc.postgresql: DEBUG
+    com.rixon.learn.spring.data.postgres: INFO
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics

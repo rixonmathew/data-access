@@ -42,6 +42,7 @@
 		<module>trinospark</module>
 		<module>kuzudb</module>
 		<module>dynamodb</module>
+		<module>reactive-postgres</module>
 	</modules>
 
 	<build>
