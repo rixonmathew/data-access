@@ -27,3 +27,5 @@
 
 dep.txt
 **/dep.txt
+/apache-ignite/ignite/
+/ignite/README.txt
