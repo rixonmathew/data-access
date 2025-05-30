@@ -43,6 +43,7 @@
 		<module>kuzudb</module>
 		<module>dynamodb</module>
 		<module>reactive-postgres</module>
+		<module>duckdb</module>
 	</modules>
 
 	<build>
