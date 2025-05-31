@@ -36,7 +36,7 @@ public class FileQueryServiceIntegrationTest {
     private static String duckdbKey;
 
     @Container
-    static LocalStackContainer localstack = new LocalStackContainer(DockerImageName.parse("localstack/localstack:2.3.2"))
+    static LocalStackContainer localstack = new LocalStackContainer(DockerImageName.parse("localstack/localstack:4.4.0"))
             .withServices(S3);
 
     @Autowired

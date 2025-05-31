@@ -39,6 +39,7 @@ public class S3Config {
         // If a custom endpoint is provided (e.g., for LocalStack), use it
         if (s3Endpoint != null && !s3Endpoint.isEmpty()) {
             builder.endpointOverride(URI.create(s3Endpoint));
+            builder.forcePathStyle(true);
         }
 
         return builder.build();
