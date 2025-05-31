@@ -5,9 +5,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import software.amazon.awssdk.core.ResponseInputStream;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
-import software.amazon.awssdk.core.ResponseInputStream;
 import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 
 import java.io.File;
@@ -50,39 +50,98 @@ public class FileQueryServiceImpl implements FileQueryService {
         this.s3Client = s3Client;
     }
 
+    /**
+     * Downloads a file from S3 to a temporary location.
+     * This is used as a fallback for testing with LocalStack.
+     */
+    private Path downloadFromS3(String bucket, String key) throws IOException {
+        logger.debug("Downloading file from S3: s3://{}/{}", bucket, key);
+
+        // Create a temporary file with the appropriate extension
+        String extension = key.substring(key.lastIndexOf('.'));
+        Path tempFile = Files.createTempFile("s3-download-", extension);
+
+        // Download the file from S3
+        GetObjectRequest getObjectRequest = GetObjectRequest.builder()
+                .bucket(bucket)
+                .key(key)
+                .build();
+
+        try (ResponseInputStream<GetObjectResponse> s3Object = s3Client.getObject(getObjectRequest);
+             FileOutputStream outputStream = new FileOutputStream(tempFile.toFile())) {
+
+            byte[] buffer = new byte[4096];
+            int bytesRead;
+            while ((bytesRead = s3Object.read(buffer)) != -1) {
+                outputStream.write(buffer, 0, bytesRead);
+            }
+        }
+
+        logger.debug("File downloaded to: {}", tempFile);
+        return tempFile;
+    }
+
     @Override
     public List<Map<String, Object>> queryParquetFile(String s3Bucket, String s3Key, String query) {
         logger.info("Querying Parquet file: s3://{}/{} with query: {}", s3Bucket, s3Key, query);
 
         try {
-            // Use DuckDB to query the Parquet file directly from S3
-            try (Connection conn = DriverManager.getConnection("jdbc:duckdb:")) {
-                try (Statement stmt = conn.createStatement()) {
-                    // Install and load httpfs extension
-                    stmt.execute("INSTALL httpfs;");
-                    stmt.execute("LOAD httpfs;");
+            // For testing with LocalStack, download the file first
+            if (s3Endpoint != null && !s3Endpoint.isEmpty()) {
+                logger.debug("Using LocalStack endpoint, downloading file first");
+                Path tempFile = downloadFromS3(s3Bucket, s3Key);
 
-                    // Set S3 credentials
-                    stmt.execute(String.format("SET s3_region='%s';", region));
-                    stmt.execute(String.format("SET s3_access_key_id='%s';", accessKeyId));
-                    stmt.execute(String.format("SET s3_secret_access_key='%s';", secretKey));
+                try {
+                    // Use DuckDB to query the downloaded Parquet file
+                    try (Connection conn = DriverManager.getConnection("jdbc:duckdb:")) {
+                        try (Statement stmt = conn.createStatement()) {
+                            // Register the Parquet file as a table
+                            String tableName = "employees";
+                            String registerQuery = String.format("CREATE OR REPLACE TABLE %s AS SELECT * FROM read_parquet('%s');", 
+                                                                tableName, tempFile.toAbsolutePath());
+                            stmt.execute(registerQuery);
 
-                    // If using a custom endpoint (e.g., LocalStack)
-                    if (s3Endpoint != null && !s3Endpoint.isEmpty()) {
-                        stmt.execute(String.format("SET s3_endpoint='%s';", s3Endpoint));
+                            // Execute the actual query
+                            return executeQuery(stmt, query);
+                        }
+                    } finally {
+                        // Clean up the temporary file
+                        Files.deleteIfExists(tempFile);
                     }
+                } catch (SQLException e) {
+                    logger.error("Error querying downloaded Parquet file", e);
+                    throw new RuntimeException("Error querying downloaded Parquet file", e);
+                }
+            } else {
+                // For production, use DuckDB to query the Parquet file directly from S3
+                try (Connection conn = DriverManager.getConnection("jdbc:duckdb:")) {
+                    try (Statement stmt = conn.createStatement()) {
+                        // Install and load httpfs extension
+                        stmt.execute("INSTALL httpfs;");
+                        stmt.execute("LOAD httpfs;");
 
-                    // Register the Parquet file as a table directly from S3
-                    String tableName = "employees";
-                    String s3Url = String.format("s3://%s/%s", s3Bucket, s3Key);
-                    String registerQuery = String.format("CREATE OR REPLACE TABLE %s AS SELECT * FROM read_parquet('%s');", 
-                                                        tableName, s3Url);
-                    stmt.execute(registerQuery);
+                        // Set S3 credentials
+                        stmt.execute(String.format("SET s3_region='%s';", region));
+                        stmt.execute(String.format("SET s3_access_key_id='%s';", accessKeyId));
+                        stmt.execute(String.format("SET s3_secret_access_key='%s';", secretKey));
 
-                    // Execute the actual query
-                    return executeQuery(stmt, query);
+                        // Standard S3 URL format
+                        String s3Url = String.format("s3://%s/%s", s3Bucket, s3Key);
+
+                        // Register the Parquet file as a table directly from S3
+                        String tableName = "employees";
+                        String registerQuery = String.format("CREATE OR REPLACE TABLE %s AS SELECT * FROM read_parquet('%s');", 
+                                                            tableName, s3Url);
+                        stmt.execute(registerQuery);
+
+                        // Execute the actual query
+                        return executeQuery(stmt, query);
+                    }
                 }
             }
+        } catch (IOException e) {
+            logger.error("Error downloading Parquet file from S3", e);
+            throw new RuntimeException("Error downloading Parquet file from S3", e);
         } catch (SQLException e) {
             logger.error("Error querying Parquet file", e);
             throw new RuntimeException("Error querying Parquet file", e);
@@ -94,20 +153,54 @@ public class FileQueryServiceImpl implements FileQueryService {
         logger.info("Querying DuckDB file: s3://{}/{} with query: {}", s3Bucket, s3Key, query);
 
         try {
-            // Download the DuckDB file from S3 to a temporary location
-            Path tempFile = downloadFromS3(s3Bucket, s3Key);
+            // For testing with LocalStack, download the file first
+            if (s3Endpoint != null && !s3Endpoint.isEmpty()) {
+                logger.debug("Using LocalStack endpoint, downloading file first");
+                Path tempFile = downloadFromS3(s3Bucket, s3Key);
 
-            // Connect to the DuckDB file
-            try (Connection conn = DriverManager.getConnection("jdbc:duckdb:" + tempFile.toAbsolutePath())) {
-                try (Statement stmt = conn.createStatement()) {
-                    // Execute the query
-                    return executeQuery(stmt, query);
+                try {
+                    // Use DuckDB to query the downloaded DuckDB file
+                    try (Connection conn = DriverManager.getConnection("jdbc:duckdb:" + tempFile.toAbsolutePath())) {
+                        try (Statement stmt = conn.createStatement()) {
+                            // Execute the query
+                            return executeQuery(stmt, query);
+                        }
+                    } finally {
+                        // Clean up the temporary file
+                        Files.deleteIfExists(tempFile);
+                    }
+                } catch (SQLException e) {
+                    logger.error("Error querying downloaded DuckDB file", e);
+                    throw new RuntimeException("Error querying downloaded DuckDB file", e);
                 }
-            } finally {
-                // Clean up the temporary file
-                Files.deleteIfExists(tempFile);
+            } else {
+                // For production, use DuckDB to query the DuckDB file directly from S3
+                try (Connection conn = DriverManager.getConnection("jdbc:duckdb:")) {
+                    try (Statement stmt = conn.createStatement()) {
+                        // Install and load httpfs extension
+                        stmt.execute("INSTALL httpfs;");
+                        stmt.execute("LOAD httpfs;");
+
+                        // Set S3 credentials
+                        stmt.execute(String.format("SET s3_region='%s';", region));
+                        stmt.execute(String.format("SET s3_access_key_id='%s';", accessKeyId));
+                        stmt.execute(String.format("SET s3_secret_access_key='%s';", secretKey));
+
+                        // Standard S3 URL format
+                        String s3Url = String.format("s3://%s/%s", s3Bucket, s3Key);
+
+                        // Connect to the DuckDB file directly from S3
+                        stmt.execute(String.format("ATTACH DATABASE '%s' AS s3db;", s3Url));
+
+                        // Execute the query
+                        return executeQuery(stmt, query);
+                    }
+                }
             }
-        } catch (IOException | SQLException e) {
+        } catch (IOException e) {
+            logger.error("Error downloading DuckDB file from S3", e);
+            throw new RuntimeException("Error downloading DuckDB file from S3", e);
+        } catch (SQLException e) {
             logger.error("Error querying DuckDB file", e);
             throw new RuntimeException("Error querying DuckDB file", e);
         }
@@ -145,42 +238,6 @@ public class FileQueryServiceImpl implements FileQueryService {
         return result;
     }
 
-    /**
-     * Downloads a file from S3 to a temporary location.
-     */
-    private Path downloadFromS3(String bucket, String key) throws IOException {
-        logger.debug("Downloading file from S3: s3://{}/{}", bucket, key);
-
-        // Create a temporary file
-        Path tempFile = Files.createTempFile("s3-download-", getFileExtension(key));
-
-        // Download the file from S3
-        GetObjectRequest getObjectRequest = GetObjectRequest.builder()
-                .bucket(bucket)
-                .key(key)
-                .build();
-
-        try (ResponseInputStream<GetObjectResponse> s3Object = s3Client.getObject(getObjectRequest);
-             FileOutputStream outputStream = new FileOutputStream(tempFile.toFile())) {
-
-            byte[] buffer = new byte[4096];
-            int bytesRead;
-            while ((bytesRead = s3Object.read(buffer)) != -1) {
-                outputStream.write(buffer, 0, bytesRead);
-            }
-        }
-
-        logger.debug("File downloaded to: {}", tempFile);
-        return tempFile;
-    }
-
-    /**
-     * Extracts the file extension from a key.
-     */
-    private String getFileExtension(String key) {
-        int lastDotIndex = key.lastIndexOf('.');
-        return lastDotIndex > 0 ? key.substring(lastDotIndex) : "";
-    }
 
     /**
      * Executes a SQL query and converts the result set to a list of maps.
