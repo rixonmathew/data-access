@@ -102,6 +102,8 @@ public class TestDataUtil {
                     "email VARCHAR, " +
                     "department VARCHAR" +
                     ");");
+
+            stmt.execute("CREATE INDEX department_idx ON employees(department);");
             
             // Insert data
             StringBuilder insertQuery = new StringBuilder("INSERT INTO employees VALUES ");

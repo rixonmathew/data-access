@@ -32,6 +32,7 @@ public interface FileQueryService {
 
     /**
      * Compares the performance of querying a Parquet file versus a DuckDB file.
+     * This is a convenience method that runs the query once.
      *
      * @param s3Bucket The S3 bucket name
      * @param parquetKey The S3 object key for the Parquet file
@@ -39,5 +40,20 @@ public interface FileQueryService {
      * @param query The SQL query to execute on both files
      * @return A performance comparison result
      */
-    PerformanceResult compareQueryPerformance(String s3Bucket, String parquetKey, String duckdbKey, String query);
+    default PerformanceResult compareQueryPerformance(String s3Bucket, String parquetKey, String duckdbKey, String query) {
+        return compareQueryPerformance(s3Bucket, parquetKey, duckdbKey, query, 1);
+    }
+
+    /**
+     * Compares the performance of querying a Parquet file versus a DuckDB file.
+     * Runs the query multiple times and reports min, max, and average query times.
+     *
+     * @param s3Bucket The S3 bucket name
+     * @param parquetKey The S3 object key for the Parquet file
+     * @param duckdbKey The S3 object key for the DuckDB file
+     * @param query The SQL query to execute on both files
+     * @param numRuns The number of times to run the query
+     * @return A performance comparison result with statistics
+     */
+    PerformanceResult compareQueryPerformance(String s3Bucket, String parquetKey, String duckdbKey, String query, int numRuns);
 }

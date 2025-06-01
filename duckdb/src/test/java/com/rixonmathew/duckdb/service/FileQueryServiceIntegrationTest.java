@@ -30,7 +30,7 @@ import static org.testcontainers.containers.localstack.LocalStackContainer.Servi
 public class FileQueryServiceIntegrationTest {
 
     private static final Logger logger = LoggerFactory.getLogger(FileQueryServiceIntegrationTest.class);
-    private static final int NUM_EMPLOYEES = 1000;
+    private static final int NUM_EMPLOYEES = 100000;
     private static String bucketName;
     private static String parquetKey;
     private static String duckdbKey;
@@ -121,5 +121,43 @@ public class FileQueryServiceIntegrationTest {
         logger.info("DuckDB query time: {}ms", result.getDuckdbQueryTime().toMillis());
         logger.info("Faster format: {}", result.getFasterFormat());
         logger.info("Speed difference: {}%", String.format("%.2f", result.getSpeedDifferencePercent()));
+    }
+
+    @Test
+    void testCompareQueryPerformanceMultipleRuns() {
+        String query = "SELECT department, COUNT(*) as count FROM employees GROUP BY department ORDER BY count DESC";
+        int numRuns = 10;
+        PerformanceResult result = fileQueryService.compareQueryPerformance(bucketName, parquetKey, duckdbKey, query, numRuns);
+
+        assertNotNull(result);
+        assertTrue(result.isResultsMatch());
+        assertEquals(numRuns, result.getNumRuns());
+
+        // Verify that min, max, and avg times are calculated correctly
+        assertNotNull(result.getMinParquetQueryTime());
+        assertNotNull(result.getMaxParquetQueryTime());
+        assertNotNull(result.getAvgParquetQueryTime());
+        assertNotNull(result.getMinDuckdbQueryTime());
+        assertNotNull(result.getMaxDuckdbQueryTime());
+        assertNotNull(result.getAvgDuckdbQueryTime());
+
+        // Verify that the query times lists have the correct size
+        assertEquals(numRuns, result.getParquetQueryTimes().size());
+        assertEquals(numRuns, result.getDuckdbQueryTimes().size());
+
+        // Log the performance results
+        logger.info("Performance comparison results (multiple runs):");
+        logger.info("Query: {}", query);
+        logger.info("Number of runs: {}", numRuns);
+        logger.info("Parquet query time (min/avg/max): {}/{}/{}ms", 
+                result.getMinParquetQueryTime().toMillis(),
+                result.getAvgParquetQueryTime().toMillis(),
+                result.getMaxParquetQueryTime().toMillis());
+        logger.info("DuckDB query time (min/avg/max): {}/{}/{}ms", 
+                result.getMinDuckdbQueryTime().toMillis(),
+                result.getAvgDuckdbQueryTime().toMillis(),
+                result.getMaxDuckdbQueryTime().toMillis());
+        logger.info("Faster format (based on avg): {}", result.getFasterFormat());
+        logger.info("Speed difference (based on avg): {}%", String.format("%.2f", result.getSpeedDifferencePercent()));
     }
 }
