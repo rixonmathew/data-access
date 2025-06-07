@@ -23,7 +23,7 @@
 		<java.version>23</java.version>
 		<maven.compiler.source>23</maven.compiler.source>
 		<maven.compiler.target>23</maven.compiler.target>
-		<testcontainer.version>1.21.0</testcontainer.version>
+		<testcontainer.version>1.21.1</testcontainer.version>
 	</properties>
 
 	<modules>
