@@ -1,0 +1,28 @@
+# Server configuration
+server:
+  port: 8083  # Use a different port to avoid conflicts with other modules
+
+# Spring configuration
+spring:
+  application:
+    name: sqlite3-service
+  datasource:
+    driver-class-name: org.sqlite.JDBC
+    # The actual URL is configured in DatabaseConfig.java
+
+# Logging configuration
+logging:
+  level:
+    root: INFO
+    com.rixonmathew.dataaccess.sqlite3: DEBUG
+    org.springframework.jdbc: INFO
+
+# Management endpoints
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always

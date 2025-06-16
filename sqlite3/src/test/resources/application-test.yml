@@ -1,0 +1,20 @@
+# Test configuration for SQLite3 module
+
+# Spring configuration
+spring:
+  datasource:
+    driver-class-name: org.sqlite.JDBC
+    # The actual URL is configured in DatabaseConfig.java
+  
+  # Disable JPA auto-configuration for tests
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration
+
+# Logging configuration for tests
+logging:
+  level:
+    root: INFO
+    com.rixonmathew.dataaccess.sqlite3: DEBUG
+    org.springframework.jdbc: DEBUG
+    org.testcontainers: INFO
