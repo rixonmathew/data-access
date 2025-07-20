@@ -53,6 +53,10 @@ public class TestcontainersConfiguration {
         config.setCatalogJdbcUrl(postgresContainer.getJdbcUrl());
         config.setCatalogUsername(postgresContainer.getUsername());
         config.setCatalogPassword(postgresContainer.getPassword());
+        config.setHost(postgresContainer.getHost());
+        config.setPort(postgresContainer.getFirstMappedPort());
+        config.setDatabase(postgresContainer.getDatabaseName());
+        config.setCatalogDataFilesPath("data_files/");
         return config;
     }
 }

@@ -66,19 +66,34 @@ public class DuckDBService implements DisposableBean {
             // Create and attach a catalog database based on configuration
             if ("postgres".equalsIgnoreCase(duckDBConfig.getCatalogType()) && 
                 duckDBConfig.getCatalogJdbcUrl() != null) {
+                stmt.execute("INSTALL postgres;LOAD postgres;");
+                stmt.execute("""
+                    create secret if not exists postgres_secret(
+                           type postgres,
+                           host '%s',
+                           port %d,
+                           database '%s',
+                           user '%s',
+                           password '%s');
+                """.formatted(duckDBConfig.getHost(),duckDBConfig.getPort(),duckDBConfig.getDatabase()
+                ,duckDBConfig.getCatalogUsername(),duckDBConfig.getCatalogPassword()));
 
                 log.info("Creating and attaching PostgreSQL catalog database");
-
-                // Set up the catalog database
-                // Configure DuckDB to use PostgreSQL for DuckLake
-                stmt.execute("SET ducklake_catalog_type='postgres'");
-                stmt.execute(String.format("SET ducklake_postgres_connection_string='%s'", 
-                    duckDBConfig.getCatalogJdbcUrl()));
-                stmt.execute(String.format("SET ducklake_postgres_username='%s'", 
-                    duckDBConfig.getCatalogUsername()));
-                stmt.execute(String.format("SET ducklake_postgres_password='%s'", 
-                    duckDBConfig.getCatalogPassword()));
-
+                stmt.execute("""
+                ATTACH 'ducklake:postgres:dbname=%s host=%s port=%d user=%s password=%s' as pg_ducklake (data_path '%s');
+                """.formatted(duckDBConfig.getDatabase(),duckDBConfig.getHost(),duckDBConfig.getPort(),
+                        duckDBConfig.getCatalogUsername(),duckDBConfig.getCatalogPassword(),duckDBConfig.getCatalogDataFilesPath()
+                        ));
+                stmt.execute("use pg_ducklake;");
+                stmt.execute("create table sales_data(id integer, product varchar, sale decimal(10,2),sale_date date,region varchar)");
+                stmt.execute("ALTER TABLE sales_data SET PARTITIONED BY (year(sale_date), region);");
+                stmt.execute("insert into sales_data values(1,'apple',12.34,'2022-01-01','western')");
+                stmt.execute("insert into sales_data values(2,'banana',15.67,'2022-01-02','southern')");
+                stmt.execute("insert into sales_data values(3,'orange',10.98,'2022-01-03','eastern')");
+                ResultSet resultSet = stmt.executeQuery("select * from sales_data");
+                while (resultSet.next()) {
+                    log.info("{}", resultSet.getString(2));
+                }
                 log.info("PostgreSQL catalog database configured successfully");
                 log.info("PostgreSQL catalog database attached successfully");
             } else {
@@ -304,7 +319,7 @@ public class DuckDBService implements DisposableBean {
             // First, create the table with the specified number of columns
             StringBuilder createTableSql = new StringBuilder();
             createTableSql.append("CREATE OR REPLACE TABLE ").append(tableName).append(" (");
-            createTableSql.append("id INTEGER PRIMARY KEY");
+            createTableSql.append("id INTEGER");
 
             for (int i = 1; i <= columns; i++) {
                 createTableSql.append(", attr").append(i).append(" VARCHAR");
