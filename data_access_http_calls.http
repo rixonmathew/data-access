@@ -7,3 +7,6 @@ GET http://rixm1mini:9799/instruments
 ### Oracle Get Single instrument
 GET http://rixm1mini:9799/instruments/8950
 
+### Get instance from m4max
+GET http://rixm4max:9799/instruments/8965
+

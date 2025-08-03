@@ -1,8 +1,11 @@
 package com.rixonmathew.dataacess.kuzudb;
 
+import com.kuzudb.Connection;
+import com.kuzudb.Database;
+import com.kuzudb.FlatTuple;
+import com.kuzudb.QueryResult;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
-import com.kuzudb.*;
 
 @SpringBootTest
 class KuzudbApplicationTests {
@@ -12,7 +15,7 @@ class KuzudbApplicationTests {
     }
 
     @Test
-    void testCreateInMemoryDB() throws ObjectRefDestroyedException {
+    void testCreateInMemoryDB() throws Exception {
         Database db = new Database(":memory:");
         Connection conn = new Connection(db);
         // Create tables.
