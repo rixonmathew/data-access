@@ -8,7 +8,8 @@ spring:
     database: postgres
     username: postgres
     password: postgres
-    
+    timezone: UTC
+
   sql:
     init:
       mode: always

@@ -9,16 +9,16 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 @ExtendWith(SpringExtension.class)
-@ContextConfiguration(classes = AWSConfig.class)
+@ContextConfiguration(classes = ObjectStoreConfiguration.class)
 
 public class TestS3Accessor {
     @Autowired
-    private AWSConfig awsConfig;
+    private ObjectStoreConfiguration objectStoreConfiguration;
     @Test
     @DisplayName("Test upload of CSV file to S3 bucket")
     @Disabled("To be run locally only")
     public void testS3upload() {
-        S3Accessor s3Accessor = new S3Accessor(awsConfig);
+        S3Accessor s3Accessor = new S3Accessor(objectStoreConfiguration);
         s3Accessor.uploadInstrumentData(100000);
 
     }
