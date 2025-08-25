@@ -11,19 +11,13 @@ import software.amazon.awssdk.services.s3.S3Client;
 
 import java.net.URI;
 
-@Configuration
 public class ObjectStoreConfiguration {
 
-    @Value("${aws.accessKey}")
-    private String accessKey;
-    @Value("${aws.accessSecret}")
-    private String accessSecret;
-    @Value("${aws.region}")
-    private String awsRegion;
-    @Value("${aws.bucketName}")
-    private String s3BucketName;
-    @Value("${aws.endpoint}")
-    private String endpoint;
+    private final String accessKey;
+    private final String accessSecret;
+    private final String awsRegion;
+    private final String s3BucketName;
+    private final String endpoint;
 
     public ObjectStoreConfiguration(String accessKey, String accessSecret, String awsRegion, String s3BucketName, String endpoint) {
         this.accessKey = accessKey;

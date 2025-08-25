@@ -1,19 +1,17 @@
 package com.rixon.learn.awss3;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
-
-@ExtendWith(SpringExtension.class)
-@ContextConfiguration(classes = ObjectStoreConfiguration.class)
 
 public class TestS3Accessor {
-    @Autowired
     private ObjectStoreConfiguration objectStoreConfiguration;
+
+    @BeforeEach
+    public void setup(){
+        objectStoreConfiguration = new ObjectStoreConfiguration("accessKey", "accessSecret", "us-east-1", "s3BucketName", "http://localhost:4566");
+    }
     @Test
     @DisplayName("Test upload of CSV file to S3 bucket")
     @Disabled("To be run locally only")
