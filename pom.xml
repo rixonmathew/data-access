@@ -5,7 +5,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.5.5</version>
+        <version>3.5.7</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.rixon.ducklake</groupId>
@@ -14,9 +14,9 @@
     <name>ducklake_poc</name>
     <description>ducklake_poc</description>
     <properties>
-        <java.version>21</java.version>
+        <java.version>25</java.version>
         <testcontainers.version>1.21.3</testcontainers.version>
-        <duckdb.version>1.4.0.0</duckdb.version>
+        <duckdb.version>1.4.1.0</duckdb.version>
         <aws.sdk.version>2.32.23</aws.sdk.version>
         <avro.version>1.12.0</avro.version>
         <parquet.version>1.15.2</parquet.version>
