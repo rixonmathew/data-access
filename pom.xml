@@ -34,7 +34,7 @@
 		<module>reactive-cassandra</module>
 		<module>hazelcast-server</module>
         <module>reactive-h2</module>
-		<module>oracle19c</module>
+		<module>oracle26ai</module>
 		<module>apache-ignite</module>
 		<module>cockroachdb</module>
 		<module>yugabytedb</module>
