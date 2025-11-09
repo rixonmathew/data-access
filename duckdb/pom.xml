@@ -15,8 +15,6 @@
     <properties>
         <duckdb.version>1.4.1.0</duckdb.version>
         <arrow.version>18.3.0</arrow.version>
-        <aws.sdk.version>2.31.54</aws.sdk.version>
-        <testcontainers.version>1.21.1</testcontainers.version>
     </properties>
     <dependencyManagement>
         <dependencies>
