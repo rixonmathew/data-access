@@ -9,11 +9,6 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>aws-s3</artifactId>
-    <properties>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
-        <aws.sdk.version>2.32.26</aws.sdk.version>
-    </properties>
     <dependencyManagement>
         <dependencies>
             <dependency>
@@ -62,7 +57,6 @@
         <dependency>
             <groupId>software.amazon.awssdk</groupId>
             <artifactId>auth</artifactId>
-            <version>2.32.26</version>
             <scope>compile</scope>
         </dependency>
     </dependencies>

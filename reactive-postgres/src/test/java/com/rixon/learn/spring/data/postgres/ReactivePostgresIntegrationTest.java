@@ -18,6 +18,7 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.time.LocalDate;
+import java.util.TimeZone;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -27,7 +28,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class ReactivePostgresIntegrationTest {
 
     @Container
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:latest")
+    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:18")
             .withDatabaseName("testdb")
             .withUsername("test")
             .withPassword("test");
@@ -42,6 +43,7 @@ public class ReactivePostgresIntegrationTest {
 
     @DynamicPropertySource
     static void registerPgProperties(DynamicPropertyRegistry registry) {
+        TimeZone.setDefault(TimeZone.getTimeZone("Asia/Kolkata"));
         registry.add("spring.r2dbc.host", postgres::getHost);
         registry.add("spring.r2dbc.port", postgres::getFirstMappedPort);
         registry.add("spring.r2dbc.database", postgres::getDatabaseName);
@@ -51,6 +53,7 @@ public class ReactivePostgresIntegrationTest {
 
     @BeforeEach
     void setUp() {
+
         webTestClient = WebTestClient
                 .bindToServer()
                 .baseUrl("http://localhost:" + port)

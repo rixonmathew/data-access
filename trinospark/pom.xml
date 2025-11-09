@@ -11,10 +11,6 @@
 
     <artifactId>trinospark</artifactId>
 
-    <properties>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
-    </properties>
     <dependencies>
         <dependency>
             <groupId>org.projectlombok</groupId>
@@ -35,7 +31,7 @@
         <dependency>
             <groupId>io.trino</groupId>
             <artifactId>trino-jdbc</artifactId>
-            <version>389</version>
+            <version>478</version>
         </dependency>
         <dependency>
             <groupId>org.javatuples</groupId>

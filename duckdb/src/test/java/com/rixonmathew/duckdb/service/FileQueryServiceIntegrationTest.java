@@ -2,7 +2,6 @@ package com.rixonmathew.duckdb.service;
 
 import com.rixonmathew.duckdb.model.PerformanceResult;
 import com.rixonmathew.duckdb.util.TestDataUtil;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;

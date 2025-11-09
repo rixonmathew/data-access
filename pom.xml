@@ -25,6 +25,7 @@
 		<maven.compiler.source>25</maven.compiler.source>
 		<maven.compiler.target>25</maven.compiler.target>
 		<testcontainer.version>1.21.3</testcontainer.version>
+        <aws.sdk.version>2.38.2</aws.sdk.version>
 	</properties>
 
 	<modules>
@@ -37,15 +38,33 @@
 		<module>oracle26ai</module>
 		<module>apache-ignite</module>
 		<module>cockroachdb</module>
-		<module>yugabytedb</module>
 		<module>neo4j</module>
 		<module>aws-s3</module>
 		<module>trinospark</module>
-		<module>kuzudb</module>
 		<module>dynamodb</module>
 		<module>reactive-postgres</module>
 		<module>duckdb</module>
 	</modules>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>software.amazon.awssdk</groupId>
+                <artifactId>bom</artifactId>
+                <version>${aws.sdk.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.testcontainers</groupId>
+                <artifactId>testcontainers-bom</artifactId>
+                <version>${testcontainer.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+
+    </dependencyManagement>
 
 	<build>
 		<plugins>

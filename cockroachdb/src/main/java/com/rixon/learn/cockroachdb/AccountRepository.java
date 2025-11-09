@@ -5,7 +5,6 @@ import org.springframework.data.jpa.repository.*;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
-
 import java.math.BigDecimal;
 
 import static org.springframework.transaction.annotation.Propagation.MANDATORY;

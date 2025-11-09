@@ -50,7 +50,7 @@ public class DatabaseConfig extends AbstractR2dbcConfiguration {
     @Bean
     public DataSource dataSource() {
         HikariConfig config = new HikariConfig();
-        config.setJdbcUrl(String.format("jdbc:postgresql://%s:%d/%s?timezone=Asia/Kolkata", host, port, database));
+        config.setJdbcUrl(String.format("jdbc:postgresql://%s:%d/%s?TimeZone=Asia/Kolkata", host, port, database));
         config.setUsername(username);
         config.setPassword(password);
         config.setDriverClassName("org.postgresql.Driver");
@@ -58,11 +58,12 @@ public class DatabaseConfig extends AbstractR2dbcConfiguration {
         config.setMinimumIdle(2);
         config.setIdleTimeout(30000);
         config.setConnectionTimeout(30000);
+
         
         // Add custom property to indicate source
         Properties props = new Properties();
         props.setProperty("source", "reactive-postgres-module");
-        props.setProperty("timezone", "Asia/Kolkata");
+        props.setProperty("TimeZone", "Asia/Kolkata");
         config.setDataSourceProperties(props);
         
         return new HikariDataSource(config);
