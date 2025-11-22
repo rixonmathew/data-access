@@ -4,14 +4,21 @@ import com.rixon.model.util.DataGeneratorUtils;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 
-@DataJpaTest
+
+@ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = {PersistenceTestConfig.class})
+@TestPropertySource(properties = {
+        "spring.jpa.hibernate.ddl-auto=create-drop",
+        "spring.jpa.show-sql=false"
+})
 public class ContractRepositoryTests {
 
     @Autowired

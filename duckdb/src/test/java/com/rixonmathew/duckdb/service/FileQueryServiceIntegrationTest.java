@@ -10,11 +10,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
-import org.testcontainers.containers.localstack.LocalStackContainer;
-import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.containers.localstack.LocalStackContainer;
 import org.testcontainers.utility.DockerImageName;
 import software.amazon.awssdk.services.s3.S3Client;
+import static org.testcontainers.containers.localstack.LocalStackContainer.Service.S3;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -22,10 +23,9 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.testcontainers.containers.localstack.LocalStackContainer.Service.S3;
 
 @SpringBootTest
-@Testcontainers
+@Testcontainers(disabledWithoutDocker = true)
 public class FileQueryServiceIntegrationTest {
 
     private static final Logger logger = LoggerFactory.getLogger(FileQueryServiceIntegrationTest.class);
