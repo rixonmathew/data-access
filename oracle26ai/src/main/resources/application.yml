@@ -1,7 +1,7 @@
 spring:
   config:
     activate:
-      on-profile: oracle-cloud-19c
+      on-profile: oracle-cloud
   datasource:
     username: rixon
     password: wappit-xaVpop-fimqi9
@@ -12,7 +12,7 @@ spring:
       maximum-pool-size: 50
       minimum-idle: 10
       max-lifetime: 300000
-      pool-name: oracle19c
+      pool-name: oracle26ai
       connection-test-query: select 1 from dual
       data-source-properties:
         "[v$session.program]": data-access-tests
@@ -20,11 +20,13 @@ spring:
   jpa:
     show-sql: false
     hibernate:
-      ddl-auto: validate
+      ddl-auto: update
     generate-ddl: true
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.OracleDialect
+        transaction:
+          jta:
+            platform: oracle
 
 server:
   port: 9799
@@ -40,7 +42,7 @@ logging:
 spring:
   config:
     activate:
-      on-profile: oracle-cloud-19c-win
+      on-profile: oracle-cloud-win
   datasource:
     username: rixon
     password: wappit-xaVpop-fimqi9
@@ -51,7 +53,7 @@ spring:
       maximum-pool-size: 50
       minimum-idle: 10
       max-lifetime: 300000
-      pool-name: oracle19c-win
+      pool-name: oracle26ai-win
       connection-test-query: select 1 from dual
       data-source-properties:
         "[v$session.program]": data-access-tests
@@ -59,11 +61,13 @@ spring:
   jpa:
     show-sql: false
     hibernate:
-      ddl-auto: validate
+      ddl-auto: update
     generate-ddl: true
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.OracleDialect
+        transaction:
+          jta:
+            platform: oracle
 
 server:
   port: 9799
