@@ -1,15 +1,17 @@
-package com.rixon.learn.spring.data.oracle19c;
+package com.rixon.learn.spring.data.oracle26ai;
 
-import com.rixon.learn.spring.data.oracle19c.service.InstrumentRepository;
-import com.rixon.learn.spring.data.oracle19c.service.InstrumentService;
+import com.rixon.learn.spring.data.oracle26ai.service.InstrumentReactiveRepository;
+import com.rixon.learn.spring.data.oracle26ai.service.InstrumentService;
 import com.rixon.model.instrument.Instrument;
 import com.rixon.model.util.DataGeneratorUtils;
+import oracle.r2dbc.OracleR2dbcOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.persistence.autoconfigure.EntityScan;
+import org.springframework.boot.r2dbc.autoconfigure.ConnectionFactoryOptionsBuilderCustomizer;
+import org.springframework.data.r2dbc.repository.config.EnableR2dbcRepositories;
 import org.springframework.context.annotation.Bean;
 import org.springframework.http.MediaType;
 import org.springframework.web.reactive.function.BodyExtractors;
@@ -24,10 +26,10 @@ import static org.springframework.web.reactive.function.server.RouterFunctions.r
 import static org.springframework.web.reactive.function.server.ServerResponse.ok;
 
 @SpringBootApplication
-@EntityScan(basePackages = "com.rixon.model")
+@EnableR2dbcRepositories
 public class OracleDBApplication {
 
-    public static void main(String[] args) {
+    static void main(String[] args) {
         SpringApplication.run(OracleDBApplication.class, args);
     }
 
@@ -45,22 +47,29 @@ public class OracleDBApplication {
                 });
     }
 
+    @Bean
+    public ConnectionFactoryOptionsBuilderCustomizer tnsAdminCustomizer() {
+        return builder -> {
+            // This ensures the TNS_ADMIN property is passed to the Oracle R2DBC driver
+            builder.option(OracleR2dbcOptions.TNS_ADMIN, "C:/Users/rixon/Wallet_RIXORACLOUD2023");
+        };
+    }
 
     @Bean
-    CommandLineRunner commandLineRunner(InstrumentRepository instrumentRepository) {
-        return args -> {
+    CommandLineRunner commandLineRunner(InstrumentReactiveRepository instrumentRepository) {
+        return _ -> {
 
-            int count = instrumentRepository.getCount();
-            if (count ==0) {
-                LOGGER.info("Creating instruments");
-                long startTime = System.currentTimeMillis();
-                List<Instrument> instruments = DataGeneratorUtils.randomInstruments(10_000);
-                LOGGER.info("Mocked instruments in [{}] ms",System.currentTimeMillis()-startTime);
-                instrumentRepository.saveAll(instruments);
-                LOGGER.info("Created instruments");
-            } else {
-                LOGGER.info("Found {} instruments. skipping instrument creation",count);
-            }
+            instrumentRepository.getCount().subscribe(count -> {
+                LOGGER.info("Found {} instruments",count);
+                if (count == 0) {
+                    LOGGER.info("Creating instruments");
+                    long startTime = System.currentTimeMillis();
+                    List<Instrument> instruments = DataGeneratorUtils.randomInstruments(10_000);
+                    LOGGER.info("Mocked instruments in [{}] ms",System.currentTimeMillis()-startTime);
+                    instrumentRepository.saveAll(instruments).collectList().block();
+                    LOGGER.info("Created instruments");
+                }
+            });
         };
     }
 }
