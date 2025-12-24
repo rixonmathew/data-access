@@ -48,7 +48,12 @@ public class OracleDBApplication {
                 .andRoute(POST("/instruments").and(accept(MediaType.APPLICATION_JSON)), serverRequest -> {
                     Mono<Instrument> body = serverRequest.body(BodyExtractors.toMono(Instrument.class));
                     return ok().body(instrumentService.createOrUpdate(body),String.class);
-                });
+                })
+                .andRoute(DELETE("/instruments/{id}").and(accept(MediaType.APPLICATION_JSON)), serverRequest -> {
+                    Mono<Void> deleteResult = instrumentService.deleteById(serverRequest.pathVariable("id"));
+                    return ok().body(deleteResult, String.class);
+                })
+                ;
     }
 
     @Bean

@@ -86,6 +86,7 @@ class OracleDBApplicationTests {
 
 	@Test
 	void testCreateInstrument() {
+
 		Instrument instrument = new Instrument();
 		instrument.setName("Test Instrument");
 		instrument.setType("Test Type");
@@ -101,6 +102,11 @@ class OracleDBApplicationTests {
 					String response = result.getResponseBody();
 					assertThat(response).contains("Updated instrument with id");
 				});
+
+		//delete the instrument created after test
+		webTestClient.delete().uri("/instruments/10951")
+				.exchange()
+				.expectStatus().isOk();
 	}
 
 }
