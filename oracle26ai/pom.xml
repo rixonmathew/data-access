@@ -8,19 +8,28 @@
         <version>0.0.1-SNAPSHOT</version>
     </parent>
     <artifactId>oracle26ai</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
-    <name>oracle19c</name>
+    <name>oracle26ai</name>
     <description>Demo project for Spring Boot</description>
 
     <properties>
        <oracle.client.version>23.2.0.0</oracle.client.version>
        <osdt.version>21.9.0.0</osdt.version>
+       <oracle.r2dbc.version>1.2.0</oracle.r2dbc.version>
     </properties>
 
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-r2dbc</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.oracle.database.r2dbc</groupId>
+            <artifactId>oracle-r2dbc</artifactId>
+            <version>${oracle.r2dbc.version}</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -70,19 +79,12 @@
         <!-- end -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-test</artifactId>
+            <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
-        <!-- Provide JUnit 5 API -->
         <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-api</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <!-- and the engine for surefire and failsafe -->
-        <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-engine</artifactId>
+            <groupId>io.projectreactor</groupId>
+            <artifactId>reactor-test</artifactId>
             <scope>test</scope>
         </dependency>
 

@@ -17,6 +17,12 @@ spring:
       data-source-properties:
         "[v$session.program]": data-access-tests
       idle-timeout: 120000
+  r2dbc:
+    username: rixon
+    password: wappit-xaVpop-fimqi9
+    url: r2dbc:oracle://rixoracloud2023_high
+    properties:
+      oracle.net.tns_admin: /Users/rixonmathew/apps/oracle/db_cloud/Wallet_RIXORACLOUD2023
   jpa:
     show-sql: false
     hibernate:
@@ -58,6 +64,13 @@ spring:
       data-source-properties:
         "[v$session.program]": data-access-tests
       idle-timeout: 120000
+  r2dbc:
+    username: rixon
+    password: wappit-xaVpop-fimqi9
+    url: r2dbc:oracle://rixoracloud2023_high
+    properties:
+      oracle.net.tns_admin: C:/Users/rixon/Wallet_RIXORACLOUD2023
+
   jpa:
     show-sql: false
     hibernate:
@@ -77,5 +90,3 @@ logging:
     console: "%d{yyyy-MM-dd HH:mm:ss} %-5level %logger{36} - %msg%n"
     level:
       - org.hibernate.SQL: error
-
----
