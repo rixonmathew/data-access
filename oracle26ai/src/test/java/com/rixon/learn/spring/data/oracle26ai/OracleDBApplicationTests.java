@@ -17,7 +17,7 @@ import java.time.Duration;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@ActiveProfiles("oracle-cloud-win")
+@ActiveProfiles(resolver = OSActiveProfilesResolver.class)
 class OracleDBApplicationTests {
 
 	@LocalServerPort

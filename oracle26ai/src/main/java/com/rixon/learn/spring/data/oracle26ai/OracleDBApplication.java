@@ -7,6 +7,7 @@ import com.rixon.model.util.DataGeneratorUtils;
 import oracle.r2dbc.OracleR2dbcOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -35,6 +36,9 @@ public class OracleDBApplication {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(OracleDBApplication.class);
 
+    @Value("${spring.r2dbc.properties.oracle.net.tns_admin}")
+    private String tnsAdminPath;
+
     @Bean
     RouterFunction<ServerResponse> routerFunction(InstrumentService instrumentService) {
         return route(GET("/instruments"),
@@ -51,7 +55,7 @@ public class OracleDBApplication {
     public ConnectionFactoryOptionsBuilderCustomizer tnsAdminCustomizer() {
         return builder -> {
             // This ensures the TNS_ADMIN property is passed to the Oracle R2DBC driver
-            builder.option(OracleR2dbcOptions.TNS_ADMIN, "C:/Users/rixon/Wallet_RIXORACLOUD2023");
+            builder.option(OracleR2dbcOptions.TNS_ADMIN, tnsAdminPath);
         };
     }
 
