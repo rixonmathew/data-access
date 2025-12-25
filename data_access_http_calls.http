@@ -7,6 +7,8 @@ GET http://localhost:9799/instruments
 ### Oracle Get instruments local machine
 GET http://localhost:9799/instruments/8950
 
+### Oralce Get Instrument stream
+GET http://localhost:9799/instruments/stream
 
 
 ### Oracle Get instruments

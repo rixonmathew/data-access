@@ -71,6 +71,20 @@ class OracleDBApplicationTests {
 	}
 
 	@Test
+	void testStreamInstruments() {
+		webTestClient.get().uri("/instruments/stream")
+				.exchange()
+				.expectStatus().isOk()
+				.expectHeader().contentTypeCompatibleWith(MediaType.TEXT_EVENT_STREAM)
+				.returnResult(Instrument.class)
+				.getResponseBody()
+				.take(5)
+				.as(StepVerifier::create)
+				.expectNextCount(5)
+				.verifyComplete();
+	}
+
+	@Test
 	void testGetInstrumentById() {
 		webTestClient.get().uri("/instruments/10950")
 				.exchange()

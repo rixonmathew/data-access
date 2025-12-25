@@ -43,6 +43,8 @@ public class OracleDBApplication {
     RouterFunction<ServerResponse> routerFunction(InstrumentService instrumentService) {
         return route(GET("/instruments"),
                 request -> ok().body(instrumentService.findAll(), Instrument.class))
+                .andRoute(GET("/instruments/stream"),
+                        request -> ok().contentType(MediaType.TEXT_EVENT_STREAM).body(instrumentService.findAll(), Instrument.class))
                 .andRoute(GET("/instruments/{id}"),
                         request -> ok().body(instrumentService.byId(request.pathVariable("id")), Instrument.class))
                 .andRoute(POST("/instruments").and(accept(MediaType.APPLICATION_JSON)), serverRequest -> {
