@@ -1,6 +1,10 @@
 ### Reactive H2 All Contracts
 GET localhost:9596/contracts
 
+### Reactive H2 All Contract Events
+GET localhost:9596/contracts/2d8ac981-f323-494d-96fd-f45e02ada8c5/events
+
+
 ### Oracle Get instruments local machine
 GET http://localhost:9799/instruments
 
