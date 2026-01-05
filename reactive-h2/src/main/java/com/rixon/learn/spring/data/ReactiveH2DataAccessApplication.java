@@ -96,7 +96,7 @@ public class ReactiveH2DataAccessApplication {
         return LongStream.range(0, 100)
                 .mapToObj(index->{
                     ContractRH2 contract = new ContractRH2();
-                    contract.setId(UUID.randomUUID().toString());
+                    contract.setId("cid-" + index);
                     contract.setType("LOAN");
                     contract.setAssetIdentifierType("CUSIP");
                     contract.setAssetIdentifier("C1123323");
