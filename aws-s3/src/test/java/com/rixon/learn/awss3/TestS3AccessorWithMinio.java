@@ -1,9 +1,6 @@
 package com.rixon.learn.awss3;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Assumptions;
+import org.junit.jupiter.api.*;
 
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -27,6 +24,7 @@ public class TestS3AccessorWithMinio {
 
     @Test
     @DisplayName("Test upload of CSV file to S3 bucket")
+    @Disabled("To be run locally only")
     public void testS3upload() {
         // Skip test if endpoint is not reachable
         Assumptions.assumeTrue(isEndpointReachable(endpoint), "MinIO endpoint is not reachable; skipping test");
