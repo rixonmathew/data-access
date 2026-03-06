@@ -39,7 +39,7 @@ spring:
     password: wappit-xaVpop-fimqi1
     url: r2dbc:oracle://rixoracloud2023_high
     properties:
-      oracle.net.tns_admin: C:/Users/rixon/Wallet_RIXORACLOUD2023
+      oracle.net.tns_admin: ${user.home}/Wallet_RIXORACLOUD2023
 
   jpa:
     show-sql: false

@@ -7,11 +7,16 @@ public class OSActiveProfilesResolver implements ActiveProfilesResolver {
     @Override
     public String[] resolve(Class<?> testClass) {
         String os = System.getProperty("os.name").toLowerCase();
-        if (os.contains("win")) {
+        if (os.contains("win") || isWSL()) {
             return new String[]{"oracle-cloud-win"};
         } else {
             // Assuming non-windows is linux/mac and should use oracle-cloud
             return new String[]{"oracle-cloud"};
         }
+    }
+
+    private boolean isWSL() {
+        String osVersion = System.getProperty("os.version");
+        return osVersion != null && osVersion.toLowerCase().contains("microsoft");
     }
 }
