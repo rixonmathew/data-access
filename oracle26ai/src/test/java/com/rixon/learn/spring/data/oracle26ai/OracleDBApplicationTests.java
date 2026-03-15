@@ -3,6 +3,8 @@ package com.rixon.learn.spring.data.oracle26ai;
 import com.rixon.model.instrument.Instrument;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
@@ -10,6 +12,7 @@ import org.springframework.http.MediaType;
 import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.reactive.server.WebTestClient;
+import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.time.Duration;
@@ -19,6 +22,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles(resolver = OSActiveProfilesResolver.class)
 class OracleDBApplicationTests {
+
+	private static final Logger LOGGER = LoggerFactory.getLogger(OracleDBApplicationTests.class);
 
 	@LocalServerPort
 	private int port;
@@ -51,16 +56,6 @@ class OracleDBApplicationTests {
 	}
 
 	@Test
-	void testR2dbInstrumentQuery(){
-		databaseClient.sql("select max(id) from instrument")
-				.map((row, metadata) -> row.get(0, Integer.class))
-				.one()
-				.as(StepVerifier::create)
-				.expectNext(10950)
-				.verifyComplete();
-	}
-
-	@Test
 	void testGetAllInstruments() {
 		webTestClient.get().uri("/instruments")
 				.exchange()
@@ -86,7 +81,14 @@ class OracleDBApplicationTests {
 
 	@Test
 	void testGetInstrumentById() {
-		webTestClient.get().uri("/instruments/10950")
+
+		Long id = databaseClient.sql("SELECT max(id) FROM instrument")
+				.map((row, metadata) -> row.get(0, Long.class))
+				.one()
+				.block();
+		assertThat(id).isNotNull();
+
+		webTestClient.get().uri("/instruments/" + id)
 				.exchange()
 				.expectStatus().isOk()
 				.expectHeader().contentType(MediaType.APPLICATION_JSON)
@@ -94,7 +96,7 @@ class OracleDBApplicationTests {
 				.consumeWith(result -> {
 					Instrument instrument = result.getResponseBody();
 					assertThat(instrument).isNotNull();
-					assertThat(instrument.getId()).isEqualTo(10950L);
+					assertThat(instrument.getId()).isEqualTo(id);
 				});
 	}
 

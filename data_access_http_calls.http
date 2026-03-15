@@ -10,7 +10,7 @@ GET localhost:9596/contracts/cid-99/events
 GET http://localhost:9799/instruments
 
 ### Oracle Get instruments local machine
-GET http://localhost:9799/instruments/8950
+GET http://localhost:9799/instruments/354
 
 ### Oralce Get Instrument stream
 GET http://localhost:9799/instruments/stream
