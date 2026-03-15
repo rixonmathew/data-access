@@ -49,7 +49,7 @@ public class OracleDBApplication {
                         request -> ok().body(instrumentService.byId(request.pathVariable("id")), Instrument.class))
                 .andRoute(POST("/instruments").and(accept(MediaType.APPLICATION_JSON)), serverRequest -> {
                     Mono<Instrument> body = serverRequest.body(BodyExtractors.toMono(Instrument.class));
-                    return ok().body(instrumentService.createOrUpdate(body),String.class);
+                    return ok().body(instrumentService.createOrUpdate(body), Instrument.class);
                 })
                 .andRoute(DELETE("/instruments/{id}").and(accept(MediaType.APPLICATION_JSON)), serverRequest -> {
                     Mono<Void> deleteResult = instrumentService.deleteById(serverRequest.pathVariable("id"));
@@ -70,17 +70,21 @@ public class OracleDBApplication {
     CommandLineRunner commandLineRunner(InstrumentReactiveRepository instrumentRepository) {
         return _ -> {
 
-            instrumentRepository.getCount().subscribe(count -> {
-                LOGGER.info("Found {} instruments",count);
-                if (count == 0) {
-                    LOGGER.info("Creating instruments");
-                    long startTime = System.currentTimeMillis();
-                    List<Instrument> instruments = DataGeneratorUtils.randomInstruments(10_000);
-                    LOGGER.info("Mocked instruments in [{}] ms",System.currentTimeMillis()-startTime);
-                    instrumentRepository.saveAll(instruments).collectList().block();
-                    LOGGER.info("Created instruments");
-                }
-            });
+            LOGGER.info("Initializing database with sample data");
+            LOGGER.info("Deleting existing instruments");
+            instrumentRepository.deleteAll().block();
+            LOGGER.info("Deleted existing instruments");
+
+            Long count = instrumentRepository.getCount().block();
+            LOGGER.info("Found {} instruments", count);
+            if (count != null && count == 0) {
+                LOGGER.info("Creating instruments");
+                long startTime = System.currentTimeMillis();
+                List<Instrument> instruments = DataGeneratorUtils.randomInstruments(100);
+                LOGGER.info("Mocked instruments in [{}] ms with size {}", System.currentTimeMillis() - startTime, instruments.size());
+                instrumentRepository.saveAll(instruments).collectList().block();
+                LOGGER.info("Created instruments");
+            }
         };
     }
 }

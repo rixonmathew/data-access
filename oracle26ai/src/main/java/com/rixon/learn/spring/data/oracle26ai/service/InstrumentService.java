@@ -25,9 +25,8 @@ public class InstrumentService {
         return instrumentRepository.findById(Long.valueOf(id));
     }
 
-    public Mono<String> createOrUpdate(Mono<Instrument> instrumentMono) {
-        return instrumentMono.flatMap(instrumentRepository::save)
-                .map(i -> "Updated instrument with id " + i.getId());
+    public Mono<Instrument> createOrUpdate(Mono<Instrument> instrumentMono) {
+        return instrumentMono.flatMap(instrumentRepository::save);
     }
 
     public Mono<Void> deleteById(String id) {

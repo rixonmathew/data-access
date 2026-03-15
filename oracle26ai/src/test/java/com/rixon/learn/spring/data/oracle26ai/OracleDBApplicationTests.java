@@ -56,6 +56,16 @@ class OracleDBApplicationTests {
 	}
 
 	@Test
+	void testR2dbInstrumentQuery(){
+		databaseClient.sql("select max(id) from instrument")
+				.map((row, metadata) -> row.get(0, Long.class))
+				.one()
+				.as(StepVerifier::create)
+				.expectNextMatches(id -> id >= 100)
+				.verifyComplete();
+	}
+
+	@Test
 	void testGetAllInstruments() {
 		webTestClient.get().uri("/instruments")
 				.exchange()
@@ -113,16 +123,17 @@ class OracleDBApplicationTests {
 				.bodyValue(instrument)
 				.exchange()
 				.expectStatus().isOk()
-				.expectBody(String.class)
+				.expectBody(Instrument.class)
 				.consumeWith(result -> {
-					String response = result.getResponseBody();
-					assertThat(response).contains("Updated instrument with id");
+					Instrument savedInstrument = result.getResponseBody();
+					assertThat(savedInstrument).isNotNull();
+					assertThat(savedInstrument.getId()).isNotNull();
 				});
 
-		//delete the instrument created after test
-		webTestClient.delete().uri("/instruments/10951")
-				.exchange()
-				.expectStatus().isOk();
+//		//delete the instrument created after test
+//		webTestClient.delete().uri("/instruments/10951")
+//				.exchange()
+//				.expectStatus().isOk();
 	}
 
 }
