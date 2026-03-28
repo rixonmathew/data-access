@@ -72,11 +72,6 @@ public class OracleDBApplication {
     CommandLineRunner commandLineRunner(InstrumentReactiveRepository instrumentRepository) {
         return _ -> {
 
-            LOGGER.info("Initializing database with sample data");
-            LOGGER.info("Deleting existing instruments");
-            instrumentRepository.deleteAll().block();
-            LOGGER.info("Deleted existing instruments");
-
             Long count = instrumentRepository.getCount().block();
             LOGGER.info("Found {} instruments", count);
             if (count != null && count == 0) {
