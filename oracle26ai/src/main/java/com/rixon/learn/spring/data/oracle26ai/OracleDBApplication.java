@@ -45,8 +45,10 @@ public class OracleDBApplication {
                 request -> ok().body(instrumentService.findAll(), Instrument.class))
                 .andRoute(GET("/instruments/stream"),
                         request -> ok().contentType(MediaType.TEXT_EVENT_STREAM).body(instrumentService.findAll(), Instrument.class))
-                .andRoute(GET("/instruments/{id}"),
+                .andRoute(GET("/instruments/id/{id}"),
                         request -> ok().body(instrumentService.byId(request.pathVariable("id")), Instrument.class))
+                .andRoute(GET("/instruments/random"),
+                        request -> ok().body(instrumentService.randomInstrument(), Instrument.class))
                 .andRoute(POST("/instruments").and(accept(MediaType.APPLICATION_JSON)), serverRequest -> {
                     Mono<Instrument> body = serverRequest.body(BodyExtractors.toMono(Instrument.class));
                     return ok().body(instrumentService.createOrUpdate(body), Instrument.class);

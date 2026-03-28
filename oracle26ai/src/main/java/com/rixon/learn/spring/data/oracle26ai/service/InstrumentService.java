@@ -32,4 +32,11 @@ public class InstrumentService {
     public Mono<Void> deleteById(String id) {
         return instrumentRepository.deleteById(Long.valueOf(id));
     }
+
+    public Mono<Instrument> randomInstrument() {
+        //get random instrument from database
+        return instrumentRepository.findAll()
+                .take(1)
+                .singleOrEmpty();
+    }
 }
