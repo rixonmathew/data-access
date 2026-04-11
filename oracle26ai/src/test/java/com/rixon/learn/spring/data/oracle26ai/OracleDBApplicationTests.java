@@ -98,7 +98,7 @@ class OracleDBApplicationTests {
 				.block();
 		assertThat(id).isNotNull();
 
-		webTestClient.get().uri("/instruments/" + id)
+		webTestClient.get().uri("/instruments/id/" + id)
 				.exchange()
 				.expectStatus().isOk()
 				.expectHeader().contentType(MediaType.APPLICATION_JSON)
