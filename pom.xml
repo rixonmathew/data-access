@@ -14,7 +14,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>4.0.1</version>
+		<version>4.0.6</version>
 		<relativePath/>
 	</parent>
 
@@ -26,7 +26,7 @@
 		<maven.compiler.target>25</maven.compiler.target>
 		<testcontainer.version>2.0.2</testcontainer.version>
         <testcontainers.modules.version>1.21.3</testcontainers.modules.version>
-        <aws.sdk.version>2.39.1</aws.sdk.version>
+        <aws.sdk.version>2.44.7</aws.sdk.version>
 	</properties>
 
 	<modules>
