@@ -11,7 +11,7 @@
     <artifactId>apache-ignite</artifactId>
     
     <properties>
-        <ignite.version>2.16.0</ignite.version>
+        <ignite.version>2.17.0</ignite.version>
     </properties>
     
     <dependencies>
