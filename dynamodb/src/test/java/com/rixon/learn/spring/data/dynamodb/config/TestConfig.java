@@ -23,7 +23,7 @@ public class TestConfig {
 
     @PostConstruct
     public void startContainer() {
-        localStack = new LocalStackContainer(DockerImageName.parse("localstack/localstack"))
+        localStack = new LocalStackContainer(DockerImageName.parse("localstack/localstack:3.4.0"))
                 .withServices(DYNAMODB);
         localStack.start();
     }
