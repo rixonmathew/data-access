@@ -26,7 +26,7 @@
 		<maven.compiler.target>25</maven.compiler.target>
 		<testcontainer.version>2.0.5</testcontainer.version>
         <testcontainers.modules.version>1.21.4</testcontainers.modules.version>
-        <aws.sdk.version>2.44.14</aws.sdk.version>
+        <aws.sdk.version>2.49.2</aws.sdk.version>
 	</properties>
 
 	<modules>
