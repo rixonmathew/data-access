@@ -1,6 +1,6 @@
 package com.rixon.learn.cockroachdb;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.math.BigDecimal;
 
 @Entity

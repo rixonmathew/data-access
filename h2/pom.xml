@@ -34,7 +34,7 @@
 		<dependency>
 			<groupId>net.logstash.logback</groupId>
 			<artifactId>logstash-logback-encoder</artifactId>
-			<version>4.11</version>
+			<version>9.0</version>
 		</dependency>
 		<!-- Provide JUnit 5 API -->
 		<dependency>

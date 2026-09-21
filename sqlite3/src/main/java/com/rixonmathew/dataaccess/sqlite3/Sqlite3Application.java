@@ -2,7 +2,7 @@ package com.rixonmathew.dataaccess.sqlite3;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
+import org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration;
 
 /**
  * Main application class for the SQLite3 module.

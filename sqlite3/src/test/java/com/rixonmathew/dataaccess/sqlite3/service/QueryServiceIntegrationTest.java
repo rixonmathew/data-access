@@ -100,15 +100,14 @@ public class QueryServiceIntegrationTest {
     }
 
     @Test
-    public void testQueryWithJoin() {
+    public void testQueryWithJoin() throws SQLException {
         // Create a temporary table for departments
-        queryService.query(
-                "CREATE TEMPORARY TABLE departments (id TEXT PRIMARY KEY, name TEXT)");
-
-        // Insert some departments
-        queryService.query(
-                "INSERT INTO departments VALUES ('1', 'Engineering'), ('2', 'Marketing'), " +
-                "('3', 'Finance'), ('4', 'HR')");
+        try (Statement stmt = sharedConnection.createStatement()) {
+            stmt.execute("CREATE TEMPORARY TABLE IF NOT EXISTS departments (id TEXT PRIMARY KEY, name TEXT)");
+            stmt.execute("DELETE FROM departments");
+            stmt.execute("INSERT INTO departments VALUES ('1', 'Engineering'), ('2', 'Marketing'), " +
+                         "('3', 'Finance'), ('4', 'HR')");
+        }
 
         // Execute a query with a join
         List<Employee> employees = queryService.query(

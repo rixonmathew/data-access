@@ -14,7 +14,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>4.1.0</version>
+		<version>4.1.1</version>
 		<relativePath/>
 	</parent>
 
@@ -26,7 +26,7 @@
 		<maven.compiler.target>25</maven.compiler.target>
 		<testcontainer.version>2.0.5</testcontainer.version>
         <testcontainers.modules.version>1.21.4</testcontainers.modules.version>
-        <aws.sdk.version>2.49.2</aws.sdk.version>
+        <aws.sdk.version>2.55.1</aws.sdk.version>
 	</properties>
 
 	<modules>
@@ -45,6 +45,7 @@
 		<module>dynamodb</module>
 		<module>reactive-postgres</module>
 		<module>duckdb</module>
+		<module>sqlite3</module>
 	</modules>
 
     <dependencyManagement>

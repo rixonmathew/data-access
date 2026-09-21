@@ -13,7 +13,7 @@
     <name>sqlite3</name>
     <description>sqlite3</description>
     <properties>
-        <sqlite-jdbc.version>3.45.1.0</sqlite-jdbc.version>
+        <sqlite-jdbc.version>3.53.4.0</sqlite-jdbc.version>
     </properties>
     <dependencies>
         <dependency>
@@ -48,19 +48,23 @@
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webmvc-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-testcontainers</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.testcontainers</groupId>
             <artifactId>junit-jupiter</artifactId>
-            <version>${testcontainers.version}</version>
+            <version>${testcontainers.modules.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.testcontainers</groupId>
             <artifactId>testcontainers</artifactId>
-            <version>${testcontainers.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

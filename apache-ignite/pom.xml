@@ -11,7 +11,7 @@
     <artifactId>apache-ignite</artifactId>
     
     <properties>
-        <ignite.version>2.16.0</ignite.version>
+        <ignite.version>2.18.0</ignite.version>
     </properties>
     
     <dependencies>
@@ -52,7 +52,6 @@
         <dependency>
             <groupId>org.testcontainers</groupId>
             <artifactId>testcontainers</artifactId>
-            <version>${testcontainers.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
