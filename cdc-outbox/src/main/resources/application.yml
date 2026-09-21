@@ -1,0 +1,34 @@
+spring:
+  application:
+    name: cdc-outbox
+
+  r2dbc:
+    host: localhost
+    port: 5432
+    database: testdb
+    username: test
+    password: test
+    timezone: UTC
+
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:schema.sql
+
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      acks: all
+    consumer:
+      group-id: cdc-outbox-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+
+logging:
+  level:
+    org.springframework.r2dbc: INFO
+    org.springframework.kafka: INFO
+    com.rixon.learn.spring.data.cdc: INFO

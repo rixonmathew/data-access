@@ -50,6 +50,10 @@ flowchart TD
         S3["aws-s3\n(LocalStack S3)"]
     end
 
+    subgraph StreamingCDC["Streaming & Event-Driven CDC"]
+        CDC["cdc-outbox\n(PostgreSQL + Redpanda/Kafka)"]
+    end
+
     subgraph Analytics["Columnar OLAP & Lakehouse"]
         CH["clickhouse\n(ClickHouse 24.3 Columnar)"]
         DK["duckdb\n(DuckDB + S3 Parquet)"]
@@ -59,7 +63,7 @@ flowchart TD
     end
 
     Accounts --> PG & CR
-    Orders --> MG & DDB & CS
+    Orders --> MG & DDB & CS & CDC
     Quotes --> RD & RCS & CH & DK & DL & ICE
     Exposure --> NJ
     Research --> QD & PG
@@ -72,6 +76,7 @@ flowchart TD
 | :--- | :--- | :--- | :--- | :--- |
 | [**`commons`**](commons/README.md) | Shared Domain | Unit / Mockito | Centralized Capital Markets domain entities (Account, Order, Trade, Quote, Exposure, ResearchReport); realistic synthetic data generators. | ✅ **100% Green** |
 | [**`reactive-postgres`**](reactive-postgres/README.md) | Reactive Relational & Vector | `pgvector/pgvector:pg17` (R2DBC) | Atomic transfers, `@TransactionalOperator` rollback, optimistic locking (`@Version`), non-blocking backpressure (`limitRate(25)`), `pgvector` HNSW indexing, kNN cosine/L2 search, hybrid relational SQL filtering, cross-domain order JOINs. | ✅ **100% Green** |
+| [**`cdc-outbox`**](cdc-outbox/README.md) | Event Streaming & CDC | `pgvector/pgvector:pg17` & `redpanda:v24.1.1` | Transactional Outbox pattern, atomic R2DBC order + outbox transaction, non-blocking outbox relay with `FOR UPDATE SKIP LOCKED`, Redpanda/Kafka event broker, idempotent consumer deduplication log, and streaming OLAP aggregations. | ✅ **100% Green** |
 | [**`cockroachdb`**](cockroachdb/README.md) | Distributed SQL | `cockroach:v23.2.0` | Heavy serialization contention triggering SQLState `40001` (`WriteTooOldError`), automated `@Retryable` backoff recovery, Follower Reads (`AS OF SYSTEM TIME`). | ✅ **100% Green** |
 | [**`neo4j`**](neo4j/README.md) | Graph Database | `neo4j:5.13.0` | Directed credit counterparty risk network, cyclic contagion ring detection (`(a)->(b)->(c)->(a)`), shortest contagion path, downstream blast radius traversal. | ✅ **100% Green** |
 | [**`redis`**](redis/README.md) | In-Memory Store | `redis:7.2-alpine` | Distributed lock (`SETNX` + atomic Lua script release), sub-millisecond sliding-window rate limiter via ZSet, cache-aside with TTL eviction, Redis Streams (`XADD`/`XREVRANGE`). | ✅ **100% Green** |
