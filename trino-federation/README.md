@@ -2,7 +2,7 @@
 
 [![Java](https://img.shields.io/badge/Java-25-orange.svg)](https://openjdk.org/projects/jdk/25/)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1.1-brightgreen.svg)](https://spring.io/projects/spring-boot)
-[![Trino](https://img.shields.io/badge/Trino-435-red.svg)](https://trino.io/)
+[![Trino](https://img.shields.io/badge/Trino-483-red.svg)](https://trino.io/)
 [![Testcontainers](https://img.shields.io/badge/Testcontainers-2.0.5-blue.svg)](https://testcontainers.com/)
 
 Production-grade reference implementation and verification suite for **Distributed Heterogeneous SQL Query Federation** using **Trino** (formerly PrestoSQL), **PostgreSQL**, **In-Memory Catalogs**, and **Spring Boot 4.1.1** with **Java 25**.
@@ -67,7 +67,7 @@ flowchart TD
 
 ## ⚡ Key Scenarios Tested & Validated
 
-All scenarios are verified against live **Trino** (`trinodb/trino:435`) and **PostgreSQL** (`pgvector/pgvector:pg17`) containers sharing an isolated Docker network:
+All scenarios are verified against live **Trino** (`trinodb/trino:483`) and **PostgreSQL** (`pgvector/pgvector:pg17`) containers sharing an isolated Docker network:
 
 ### 1. Multi-Engine Catalog Auto-Discovery
 * Validates that the Trino coordinator discovers and registers all mounted catalogs:

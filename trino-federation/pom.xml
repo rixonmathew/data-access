@@ -14,7 +14,7 @@
     <description>Distributed SQL Query Federation across Heterogeneous Data Sources using Trino, PostgreSQL, and In-Memory Catalogs</description>
 
     <properties>
-        <trino.version>478</trino.version>
+        <trino.version>483</trino.version>
         <testcontainers.version>1.20.4</testcontainers.version>
     </properties>
 

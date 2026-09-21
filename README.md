@@ -97,7 +97,7 @@ flowchart TD
 | [**`h2` / `reactive-h2`**](reactive-h2/README.md) | Relational In-Memory | In-Memory H2 | JPA & R2DBC contract management, schema generation, reactive streaming. | ✅ **100% Green** |
 | [**`apache-ignite`**](apache-ignite/README.md) | In-Memory Cache | In-Memory Grid | Distributed key-value cache operations and person entity retrieval. | ✅ **100% Green** |
 | [**`trinospark`**](trinospark/README.md) | Distributed Queries | Java Streams | Aggregations and grouping transformations over trade/order collection streams. | ✅ **100% Green** |
-| [**`trino-federation`**](trino-federation/README.md) | Distributed SQL Query Federation | `trinodb/trino:435` & `pgvector/pgvector:pg17` | Massively parallel processing (MPP) cross-engine SQL federation, multi-catalog auto-discovery (`postgresql`, `memory`, `tpch`, `system`), 3-way distributed hash JOINs across PostgreSQL relational tables and in-memory currency FX rates, predicate pushdown, and query plan explanation. | ✅ **100% Green** |
+| [**`trino-federation`**](trino-federation/README.md) | Distributed SQL Query Federation | `trinodb/trino:483` & `pgvector/pgvector:pg17` | Massively parallel processing (MPP) cross-engine SQL federation, multi-catalog auto-discovery (`postgresql`, `memory`, `tpch`, `system`), 3-way distributed hash JOINs across PostgreSQL relational tables and in-memory currency FX rates, predicate pushdown, and query plan explanation. | ✅ **100% Green** |
 | [**`hazelcast-server`**](hazelcast-server/README.md) | In-Memory Grid | In-Memory Hazelcast | Clustered in-memory data grid configuration. | ✅ **100% Green** |
 
 ---

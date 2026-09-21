@@ -20,15 +20,19 @@ import org.testcontainers.images.builder.Transferable;
 import org.testcontainers.junit.jupiter.EnabledIfDockerAvailable;
 import org.testcontainers.utility.DockerImageName;
 
+import org.springframework.jdbc.core.JdbcTemplate;
+
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.Statement;
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 
 @SpringBootTest
 @EnabledIfDockerAvailable
@@ -100,7 +104,7 @@ class TrinoFederationIntegrationTest {
             connection-password=test
             """;
 
-        trino = new TrinoContainer(DockerImageName.parse("trinodb/trino:435"))
+        trino = new TrinoContainer(DockerImageName.parse("trinodb/trino:483"))
                 .withNetwork(network)
                 .withCopyToContainer(
                         Transferable.of(postgresCatalogConfig.getBytes(StandardCharsets.UTF_8)),
@@ -113,10 +117,28 @@ class TrinoFederationIntegrationTest {
     @Autowired
     private FederatedQueryService federatedQueryService;
 
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
+
     @DynamicPropertySource
     static void registerProperties(DynamicPropertyRegistry registry) {
         registry.add("spring.datasource.url", () -> "jdbc:trino://" + trino.getHost() + ":" + trino.getMappedPort(8080) + "/memory/default");
         registry.add("spring.datasource.username", () -> "test");
+    }
+
+    @BeforeAll
+    static void waitForTrinoReady(@Autowired JdbcTemplate jdbcTemplate) {
+        // Ensure that Trino worker node is fully registered and active before running distributed queries
+        await().atMost(Duration.ofSeconds(30))
+                .pollInterval(Duration.ofMillis(500))
+                .until(() -> {
+                    try {
+                        Long count = jdbcTemplate.queryForObject("SELECT count(*) FROM tpch.tiny.nation", Long.class);
+                        return count != null && count > 0;
+                    } catch (Exception e) {
+                        return false;
+                    }
+                });
     }
 
     @Test
