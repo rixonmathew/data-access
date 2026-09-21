@@ -52,6 +52,7 @@
 		<module>clickhouse</module>
 		<module>qdrant</module>
 		<module>delta-lake</module>
+		<module>apache-iceberg</module>
 	</modules>
 
     <dependencyManagement>
