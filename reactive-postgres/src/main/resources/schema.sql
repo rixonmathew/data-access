@@ -38,3 +38,22 @@ CREATE TABLE IF NOT EXISTS orders (
 
 CREATE INDEX IF NOT EXISTS idx_orders_account ON orders(account_number);
 CREATE INDEX IF NOT EXISTS idx_orders_ticker ON orders(ticker);
+
+-- pgvector extension and dense embedding vector storage
+CREATE EXTENSION IF NOT EXISTS vector;
+
+CREATE TABLE IF NOT EXISTS market_research_reports (
+    id VARCHAR(64) PRIMARY KEY,
+    ticker VARCHAR(16) NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    summary TEXT NOT NULL,
+    sector VARCHAR(64) NOT NULL,
+    sentiment VARCHAR(16) NOT NULL,
+    confidence_score DOUBLE PRECISION NOT NULL,
+    embedding vector(4) NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_research_hnsw ON market_research_reports 
+USING hnsw (embedding vector_cosine_ops) 
+WITH (m = 16, ef_construction = 64);
