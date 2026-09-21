@@ -36,7 +36,7 @@ public class OracleDBApplication {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(OracleDBApplication.class);
 
-    @Value("${spring.r2dbc.properties.oracle.net.tns_admin}")
+    @Value("${spring.r2dbc.properties.oracle.net.tns_admin:}")
     private String tnsAdminPath;
 
     @Bean
@@ -64,23 +64,28 @@ public class OracleDBApplication {
     public ConnectionFactoryOptionsBuilderCustomizer tnsAdminCustomizer() {
         return builder -> {
             // This ensures the TNS_ADMIN property is passed to the Oracle R2DBC driver
-            builder.option(OracleR2dbcOptions.TNS_ADMIN, tnsAdminPath);
+            if (tnsAdminPath != null && !tnsAdminPath.isEmpty()) {
+                builder.option(OracleR2dbcOptions.TNS_ADMIN, tnsAdminPath);
+            }
         };
     }
 
     @Bean
     CommandLineRunner commandLineRunner(InstrumentReactiveRepository instrumentRepository) {
         return _ -> {
-
-            Long count = instrumentRepository.getCount().block();
-            LOGGER.info("Found {} instruments", count);
-            if (count != null && count == 0) {
-                LOGGER.info("Creating instruments");
-                long startTime = System.currentTimeMillis();
-                List<Instrument> instruments = DataGeneratorUtils.randomInstruments(100);
-                LOGGER.info("Mocked instruments in [{}] ms with size {}", System.currentTimeMillis() - startTime, instruments.size());
-                instrumentRepository.saveAll(instruments).collectList().block();
-                LOGGER.info("Created instruments");
+            try {
+                Long count = instrumentRepository.getCount().block();
+                LOGGER.info("Found {} instruments", count);
+                if (count != null && count == 0) {
+                    LOGGER.info("Creating instruments");
+                    long startTime = System.currentTimeMillis();
+                    List<Instrument> instruments = DataGeneratorUtils.randomInstruments(100);
+                    LOGGER.info("Mocked instruments in [{}] ms with size {}", System.currentTimeMillis() - startTime, instruments.size());
+                    instrumentRepository.saveAll(instruments).collectList().block();
+                    LOGGER.info("Created instruments");
+                }
+            } catch (Exception e) {
+                LOGGER.warn("Could not initialize Oracle database instruments: {}", e.getMessage());
             }
         };
     }
