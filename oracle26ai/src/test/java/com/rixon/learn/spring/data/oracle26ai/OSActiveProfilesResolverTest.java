@@ -18,8 +18,16 @@ class OSActiveProfilesResolverTest {
 
     @AfterEach
     void tearDown() {
-        System.setProperty("os.name", originalOsName);
-        System.setProperty("os.version", originalOsVersion);
+        if (originalOsName != null) {
+            System.setProperty("os.name", originalOsName);
+        } else {
+            System.clearProperty("os.name");
+        }
+        if (originalOsVersion != null) {
+            System.setProperty("os.version", originalOsVersion);
+        } else {
+            System.clearProperty("os.version");
+        }
     }
 
     @Test

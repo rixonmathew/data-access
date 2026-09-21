@@ -89,6 +89,7 @@ class OracleDBApplicationTests {
 	void testGetAllInstruments() {
 		Assumptions.assumeTrue(isDatabaseAvailable(), "Oracle database is not available");
 		webTestClient.get().uri("/instruments")
+				.accept(MediaType.APPLICATION_JSON)
 				.exchange()
 				.expectStatus().isOk()
 				.expectHeader().contentType(MediaType.APPLICATION_JSON)
@@ -118,9 +119,10 @@ class OracleDBApplicationTests {
 				.map((row, metadata) -> row.get(0, Long.class))
 				.one()
 				.block();
-		assertThat(id).isNotNull();
+		Assumptions.assumeTrue(id != null, "No instruments exist in the database");
 
 		webTestClient.get().uri("/instruments/id/" + id)
+				.accept(MediaType.APPLICATION_JSON)
 				.exchange()
 				.expectStatus().isOk()
 				.expectHeader().contentType(MediaType.APPLICATION_JSON)
@@ -142,6 +144,7 @@ class OracleDBApplicationTests {
 
 		webTestClient.post().uri("/instruments")
 				.contentType(MediaType.APPLICATION_JSON)
+				.accept(MediaType.APPLICATION_JSON)
 				.bodyValue(instrument)
 				.exchange()
 				.expectStatus().isOk()

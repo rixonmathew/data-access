@@ -49,11 +49,11 @@ public class OracleDBApplication {
                         request -> ok().body(instrumentService.byId(request.pathVariable("id")), Instrument.class))
                 .andRoute(GET("/instruments/random"),
                         request -> ok().body(instrumentService.randomInstrument(), Instrument.class))
-                .andRoute(POST("/instruments").and(accept(MediaType.APPLICATION_JSON)), serverRequest -> {
+                .andRoute(POST("/instruments"), serverRequest -> {
                     Mono<Instrument> body = serverRequest.body(BodyExtractors.toMono(Instrument.class));
                     return ok().body(instrumentService.createOrUpdate(body), Instrument.class);
                 })
-                .andRoute(DELETE("/instruments/{id}").and(accept(MediaType.APPLICATION_JSON)), serverRequest -> {
+                .andRoute(DELETE("/instruments/{id}"), serverRequest -> {
                     Mono<Void> deleteResult = instrumentService.deleteById(serverRequest.pathVariable("id"));
                     return ok().body(deleteResult, String.class);
                 })
@@ -74,7 +74,7 @@ public class OracleDBApplication {
     CommandLineRunner commandLineRunner(InstrumentReactiveRepository instrumentRepository) {
         return _ -> {
             try {
-                Long count = instrumentRepository.getCount().block();
+                Long count = instrumentRepository.getCount().block(java.time.Duration.ofSeconds(5));
                 LOGGER.info("Found {} instruments", count);
                 if (count != null && count == 0) {
                     LOGGER.info("Creating instruments");
