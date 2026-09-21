@@ -54,6 +54,7 @@
 		<module>delta-lake</module>
 		<module>apache-iceberg</module>
 		<module>cdc-outbox</module>
+		<module>trino-federation</module>
 	</modules>
 
     <dependencyManagement>

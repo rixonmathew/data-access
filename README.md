@@ -54,16 +54,17 @@ flowchart TD
         CDC["cdc-outbox\n(PostgreSQL + Redpanda/Kafka)"]
     end
 
-    subgraph Analytics["Columnar OLAP & Lakehouse"]
+    subgraph Analytics["Columnar OLAP, Lakehouse & Query Federation"]
         CH["clickhouse\n(ClickHouse 24.3 Columnar)"]
         DK["duckdb\n(DuckDB + S3 Parquet)"]
         DL["delta-lake\n(Delta Lake ACID Lakehouse)"]
         ICE["apache-iceberg\n(Apache Iceberg Open Lakehouse)"]
+        TRINO["trino-federation\n(Trino Distributed SQL)"]
         TS["trinospark\n(Distributed Queries)"]
     end
 
     Accounts --> PG & CR
-    Orders --> MG & DDB & CS & CDC
+    Orders --> MG & DDB & CS & CDC & TRINO
     Quotes --> RD & RCS & CH & DK & DL & ICE
     Exposure --> NJ
     Research --> QD & PG
@@ -96,6 +97,7 @@ flowchart TD
 | [**`h2` / `reactive-h2`**](reactive-h2/README.md) | Relational In-Memory | In-Memory H2 | JPA & R2DBC contract management, schema generation, reactive streaming. | ✅ **100% Green** |
 | [**`apache-ignite`**](apache-ignite/README.md) | In-Memory Cache | In-Memory Grid | Distributed key-value cache operations and person entity retrieval. | ✅ **100% Green** |
 | [**`trinospark`**](trinospark/README.md) | Distributed Queries | Java Streams | Aggregations and grouping transformations over trade/order collection streams. | ✅ **100% Green** |
+| [**`trino-federation`**](trino-federation/README.md) | Distributed SQL Query Federation | `trinodb/trino:435` & `pgvector/pgvector:pg17` | Massively parallel processing (MPP) cross-engine SQL federation, multi-catalog auto-discovery (`postgresql`, `memory`, `tpch`, `system`), 3-way distributed hash JOINs across PostgreSQL relational tables and in-memory currency FX rates, predicate pushdown, and query plan explanation. | ✅ **100% Green** |
 | [**`hazelcast-server`**](hazelcast-server/README.md) | In-Memory Grid | In-Memory Hazelcast | Clustered in-memory data grid configuration. | ✅ **100% Green** |
 
 ---
