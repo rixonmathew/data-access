@@ -1,0 +1,18 @@
+server:
+  port: 9898
+
+spring:
+  cassandra:
+    keyspace-name: reactive_trading_store
+    contact-points: 127.0.0.1
+    port: 9042
+    local-datacenter: datacenter1
+    schema-action: CREATE_IF_NOT_EXISTS
+    request:
+      timeout: 15s
+
+logging:
+  pattern:
+    console: "%d{HH:mm:ss.SSS} [%thread] %logger.%M - %msg%n"
+  level:
+    root: INFO

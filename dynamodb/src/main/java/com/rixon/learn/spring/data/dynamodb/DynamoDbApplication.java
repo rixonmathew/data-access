@@ -23,4 +23,11 @@ public class DynamoDbApplication {
                 .credentialsProvider(ProfileCredentialsProvider.create())
                 .build();
     }
+
+    @Bean
+    public software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient dynamoDbEnhancedClient(DynamoDbClient dynamoDbClient) {
+        return software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient.builder()
+                .dynamoDbClient(dynamoDbClient)
+                .build();
+    }
 }

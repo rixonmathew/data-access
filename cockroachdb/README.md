@@ -1,69 +1,43 @@
-# cockroachdb
+# CockroachDB Distributed SQL Module (`cockroachdb`)
 
-Accessing Data from Cockroachdb
-```shell
-## Starting cockroachdb cluster in docker insecure mode
-# Source https://www.cockroachlabs.com/docs/v21.2/start-a-local-cluster-in-docker-linux
-# Create a network
-docker network create -d bridge roachnet
+## Overview
+The `cockroachdb` module demonstrates distributed ACID transaction semantics, multi-region write contention, and automatic serialization retry handling using **CockroachDB v23.2**.
 
-# start first node
-docker run -d --name=roach1 --hostname=roach1 --net=roachnet -p 26257:26257 -p 8085:8080  -v "${PWD}/cockroach-data/roach1:/cockroach/cockroach-data"  cockroachdb/cockroach:v21.2.4 start --insecure --join=roach1,roach2,roach3
+---
 
-# start second node
-docker run -d --name=roach2 --hostname=roach2 --net=roachnet -v "${PWD}/cockroach-data/roach2:/cockroach/cockroach-data" cockroachdb/cockroach:v21.2.4 start --insecure --join=roach1,roach2,roach3
+## Technical Capabilities Tested & Validated
 
-# start third node
-docker run -d --name=roach3 --hostname=roach3 --net=roachnet -v "${PWD}/cockroach-data/roach3:/cockroach/cockroach-data" cockroachdb/cockroach:v21.2.4 start --insecure --join=roach1,roach2,roach3
+### 1. Distributed Write Contention & Serialization Failures
+- **Architecture**: CockroachDB uses Multi-Version Concurrency Control (MVCC) and consensus Raft leases to guarantee strict Serializability (`SERIALIZABLE` isolation level).
+- **Contention Scenario**: When multiple concurrent worker threads attempt to modify the same account balances simultaneously, CockroachDB rejects the lagging transactions with SQLState `40001` (`TransactionRetryWithProtoRefreshError` / `WriteTooOldError`).
+- **Spring Retry Recovery**:
+  ```java
+  @Retryable(
+      retryFor = { SQLException.class, ConcurrencyFailureException.class },
+      maxAttempts = 30,
+      backoff = @Backoff(delay = 50, maxDelay = 500, multiplier = 1.5, random = true)
+  )
+  @Transactional(isolation = Isolation.SERIALIZABLE)
+  public void transferWithRetry(String fromAccount, String toAccount, BigDecimal amount)
+  ```
+- **Validation**:
+  - Spawns concurrent threads executing 20 competing transfers on a single pair of accounts.
+  - Verifies that all 20 transfers eventually succeed after transient retry attempts, with 100% conservation of total funds.
 
-# One time initialization
-docker exec -it roach1 ./cockroach init --insecure
+### 2. Follower Reads (`AS OF SYSTEM TIME`)
+- Enables read queries to be served by local follower replicas rather than the leaseholder:
+  ```sql
+  SELECT * FROM accounts AS OF SYSTEM TIME INTERVAL '-5 seconds' WHERE account_number = ?;
+  ```
+- **Validation**:
+  - Validates low-latency consistent reads from historical snapshots.
 
-# Check if the server started up successfully
-docker exec -it roach1 grep 'node starting' cockroach-data/logs/cockroach.log -A 11
+---
 
-# connect to node
-docker exec -it roach1 ./cockroach sql --insecure
+## How to Run the Tests
 
+Runs against a live `cockroachdb/cockroach:v23.2.0` Testcontainer:
 
-#Simulating load
-docker exec -it roach1 ./cockroach workload init movr 'postgresql://root@roach1:26257?sslmode=disable'
-
-docker exec -it roach1 ./cockroach workload run movr --duration=5m 'postgresql://root@roach1:26257?sslmode=disable'
-```
-
-
-## Starting a secure cluster running on mac mini 2011
-```shell
-cockroach cert create-ca --certs-dir=certs --ca-key=my-safe-directory/ca.key
-cockroach cert create-node localhost $(hostname) --certs-dir=certs --ca-key=my-safe-directory/ca.key
-cockroach cert create-client rixon --certs-dir=certs --ca-key=my-safe-directory/ca.key
-cockroach start --certs-dir=certs --store=node1 --listen-addr=localhost:26257 --http-addr=localhost:8080 --join=localhost:26257,localhost:26258,localhost:26259 --background
-cockroach start --certs-dir=certs --store=node2 --listen-addr=localhost:26258 --http-addr=localhost:8081 --join=localhost:26257,localhost:26258,localhost:26259 --background
-cockroach start --certs-dir=certs --store=node3 --listen-addr=localhost:26259 --http-addr=localhost:8082 --join=localhost:26257,localhost:26258,localhost:26259 --background
-cockroach init --certs-dir=certs --host=localhost:26257
-cockroach cert create-client root --certs-dir=certs --ca-key=my-safe-directory/ca.key
-cockroach init --certs-dir=certs --host=localhost:26257
-grep 'node starting' node1/logs/cockroach.log -A 11
-grep 'node starting' node2/logs/cockroach.log -A 11
-grep 'node starting' node3/logs/cockroach.log -A 11
-cockroach sql --certs-dir=certs --host=localhost:26257
-ps -aef | grep cockroach
-cockroach
-cockroach node list
-cockroach node ls
-cockroach node ls --certs-dir=certs
-cockroach node status --certs-dir=certs
-cockroach
-cockroach quit --certs-dir=certs --host=localhost:26257
-cockroach quit --certs-dir=certs --host=localhost:26258
-cockroach quit --certs-dir=certs --host=localhost:26259
-cockroach node drain --certs-dir=certs
-cockroach node ls --certs-dir=certs
-ps -aef | grep cockroach
-cockroach node drain --certs-dir=certs --host=localhost:26259
-ps -aef | grep cockroach
-ps -aef | grep cockroach
-cd cockroach-data/
-cockroach --version
+```bash
+mvn test -pl cockroachdb
 ```

@@ -46,6 +46,12 @@
 		<module>reactive-postgres</module>
 		<module>duckdb</module>
 		<module>sqlite3</module>
+		<module>redis</module>
+		<module>mongodb</module>
+		<module>elasticsearch</module>
+		<module>clickhouse</module>
+		<module>qdrant</module>
+		<module>delta-lake</module>
 	</modules>
 
     <dependencyManagement>

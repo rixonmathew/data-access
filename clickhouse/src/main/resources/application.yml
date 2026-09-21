@@ -1,0 +1,9 @@
+server:
+  port: 8093
+
+spring:
+  datasource:
+    url: jdbc:ch://localhost:8123/default
+    driver-class-name: com.clickhouse.jdbc.ClickHouseDriver
+    username: default
+    password: ""

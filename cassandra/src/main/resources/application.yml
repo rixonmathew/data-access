@@ -2,9 +2,11 @@ server:
   port: 9292
 
 spring:
-  data:
-    cassandra:
-      keyspace-name: contract_store
-      port: 9142
-      contact-points: 127.0.0.1:9142
-      local-datacenter: datacenter1
+  cassandra:
+    keyspace-name: trading_store
+    contact-points: 127.0.0.1
+    port: 9042
+    local-datacenter: datacenter1
+    schema-action: CREATE_IF_NOT_EXISTS
+    request:
+      timeout: 15s

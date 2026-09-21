@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+@org.springframework.retry.annotation.EnableRetry
 @SpringBootApplication
 public class CockroachDBApplication {
 
@@ -22,6 +23,7 @@ public class CockroachDBApplication {
         SpringApplication.run(CockroachDBApplication.class,args);
     }
 
+    @org.springframework.context.annotation.Profile("!test")
     @Bean
     CommandLineRunner dataLoader(AccountRepository accountRepository) {
         return args -> {

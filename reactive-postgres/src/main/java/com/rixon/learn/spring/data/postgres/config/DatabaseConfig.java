@@ -68,4 +68,14 @@ public class DatabaseConfig extends AbstractR2dbcConfiguration {
         
         return new HikariDataSource(config);
     }
+
+    @Bean
+    public org.springframework.transaction.ReactiveTransactionManager transactionManager(ConnectionFactory connectionFactory) {
+        return new org.springframework.r2dbc.connection.R2dbcTransactionManager(connectionFactory);
+    }
+
+    @Bean
+    public org.springframework.transaction.reactive.TransactionalOperator transactionalOperator(org.springframework.transaction.ReactiveTransactionManager transactionManager) {
+        return org.springframework.transaction.reactive.TransactionalOperator.create(transactionManager);
+    }
 }

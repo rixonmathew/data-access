@@ -1,0 +1,7 @@
+server:
+  port: 8094
+
+qdrant:
+  host: localhost
+  port: 6334
+  use-tls: false

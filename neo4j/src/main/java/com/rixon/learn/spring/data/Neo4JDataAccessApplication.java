@@ -31,6 +31,7 @@ public class Neo4JDataAccessApplication {
      * @param personRepository The PersonRepository used to query the persons.
      * @return The CommandLineRunner that executes the demo logic.
      */
+    @org.springframework.context.annotation.Profile("!test")
     @Bean CommandLineRunner demo(MovieRepository movieRepository, PersonRepository personRepository){
         return args -> {
             LOGGER.info("Querying movies");

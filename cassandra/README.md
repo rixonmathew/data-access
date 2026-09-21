@@ -1,29 +1,55 @@
-#To startup Cassandra locally 
-## Windows - docker local
-Source https://cassandra.apache.org/quickstart/
-> docker pull cassandra:latest
-> 
-> docker network create cassandra
-> 
-> docker run --rm -d --name cassandra -p 9142:9042 --hostname cassandra --network cassandra cassandra
+# Apache Cassandra Wide-Column Store Module (`cassandra`)
 
-cd to resources folder where data.cql is kept
-> docker run --rm --network cassandra -v "%CD%\data.cql:/scripts/data.cql" -e CQLSH_HOST=cassandra -e CQLSH_PORT=9042 nuvo/docker-cqlsh
+## Overview
+The `cassandra` module demonstrates Apache Cassandra's distributed wide-column architecture optimized for massive write throughput, time-series partitioning, and Paxos consensus Lightweight Transactions (LWT).
 
-Interactive CQLSH 
-> _docker run --rm -it --network cassandra nuvo/docker-cqlsh cqlsh cassandra 9042 --cqlversion='3.4.5'_
+---
 
+## Technical Capabilities Tested & Validated
 
-## MacOS - cassandra via homebrew install (docker setup shown above will also work on M1 macs where arm image is not yet available)
+### 1. Time-Series Composite Key & Clustering Order
+- **Partition Key**: `((ticker, bucket_date))` — Localizes daily trades per symbol to the same cluster nodes and partition SSTable.
+- **Clustering Key**: `(execution_time, execution_id)` — Sorts executions physically on disk in descending chronological order (`CLUSTERING ORDER BY (execution_time DESC)`).
+- **Validation**:
+  - Sub-millisecond retrieval of the most recent executions for a ticker.
+  - Efficient time-window queries between `startTime` and `endTime` without cross-partition disk scans.
 
-> docker pull cassandra:latest
->
-> docker network create cassandra
->
-> docker run --rm -d --name cassandra -p 9142:9042 --hostname cassandra --network cassandra cassandra
+### 2. Paxos Lightweight Transactions (LWT) & Conditional Writes
+- **Idempotent Ingestion**: `INSERT ... IF NOT EXISTS` ensures trade fills are never double-processed on network retries.
+- **Compare-And-Set (CAS) Status Updates**:
+  ```sql
+  UPDATE trade_executions SET status = ? WHERE ticker = ? AND bucket_date = ? AND execution_time = ? AND execution_id = ? IF status = ?;
+  ```
+- **Validation**:
+  - CAS transition from `EXECUTED` to `SETTLED` succeeds.
+  - Attempting to settle an already settled trade returns `applied = false` via Cassandra's Paxos round, preventing state corruption.
 
-cd to resources folder where data.cql is kept
-> docker run --rm --network cassandra -v "$(pwd)/data.cql:/scripts/data.cql" -e CQLSH_HOST=cassandra -e CQLSH_PORT=9042 nuvo/docker-cqlsh
+---
 
-Interactive CQLSH
-> docker run --rm -it --network cassandra nuvo/docker-cqlsh cqlsh cassandra 9042 --cqlversion='3.4.4'
+## Schema CQL
+
+```cql
+CREATE TABLE IF NOT EXISTS trade_executions (
+    ticker text,
+    bucket_date text,
+    execution_time timestamp,
+    execution_id text,
+    order_id text,
+    account_number text,
+    price decimal,
+    quantity decimal,
+    side text,
+    status text,
+    PRIMARY KEY ((ticker, bucket_date), execution_time, execution_id)
+) WITH CLUSTERING ORDER BY (execution_time DESC, execution_id ASC);
+```
+
+---
+
+## How to Run the Tests
+
+Runs against an official `cassandra:4.1` Testcontainer:
+
+```bash
+mvn test -pl cassandra
+```

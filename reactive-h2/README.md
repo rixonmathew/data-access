@@ -1,9 +1,20 @@
-# data-access
+# Reactive H2 Module (`reactive-h2`)
 
-To try out normal and reactive data access
+## Overview
+The `reactive-h2` module demonstrates reactive in-memory relational data access using **Spring Data R2DBC** and the H2 R2DBC driver (`io.r2dbc:r2dbc-h2`).
 
-## Starting h2 as docker images
-Source https://hub.docker.com/r/oscarfonts/h2/
-> docker pull oscarfonts/h2
-> docker run -d -p 11521:1521 -p 11581:81 -v /mnt/d//h2/docker-data:/opt/h2-data -e H2_OPTIONS=-ifNotExists --name=h2-docker oscarfonts/h2
->
+---
+
+## Technical Capabilities Tested & Validated
+
+* Reactive contract management and non-blocking CRUD.
+* Automatic schema execution via `schema.sql` on startup.
+* Reactive stream verification with `StepVerifier`.
+
+---
+
+## How to Run the Tests
+
+```bash
+mvn test -pl reactive-h2
+```

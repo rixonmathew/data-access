@@ -1,0 +1,6 @@
+spring:
+  mongodb:
+    uri: mongodb://localhost:27017/trading_db
+
+server:
+  port: 8091

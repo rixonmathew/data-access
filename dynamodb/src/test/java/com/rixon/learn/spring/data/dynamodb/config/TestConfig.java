@@ -46,4 +46,12 @@ public class TestConfig {
                 .region(Region.of(localStack.getRegion()))
                 .build();
     }
+
+    @Bean
+    @Primary
+    public software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient testDynamoDbEnhancedClient(DynamoDbClient dynamoDbClient) {
+        return software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient.builder()
+                .dynamoDbClient(dynamoDbClient)
+                .build();
+    }
 }
