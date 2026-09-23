@@ -1,6 +1,6 @@
-package com.rixon.ducklake.ducklake_poc.service;
+package com.rixon.learn.spring.data.ducklake.service;
 
-import com.rixon.ducklake.ducklake_poc.TestcontainersConfiguration;
+import com.rixon.learn.spring.data.ducklake.TestcontainersConfiguration;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

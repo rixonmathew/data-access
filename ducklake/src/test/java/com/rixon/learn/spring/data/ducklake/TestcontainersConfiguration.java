@@ -1,6 +1,6 @@
-package com.rixon.ducklake.ducklake_poc;
+package com.rixon.learn.spring.data.ducklake;
 
-import com.rixon.ducklake.ducklake_poc.config.DuckDBConfig;
+import com.rixon.learn.spring.data.ducklake.config.DuckDBConfig;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.testcontainers.containers.PostgreSQLContainer;
@@ -19,7 +19,7 @@ public class TestcontainersConfiguration {
 
     @Bean
     PostgreSQLContainer<?> postgresContainer() {
-        PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:latest")
+        PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:17")
                 .withDatabaseName("ducklake_catalog")
                 .withUsername("ducklake")
                 .withPassword("ducklake");
@@ -29,7 +29,7 @@ public class TestcontainersConfiguration {
 
     @Bean
     LocalStackContainer localStackContainer() {
-        LocalStackContainer localstack = new LocalStackContainer(DockerImageName.parse("localstack/localstack:latest"))
+        LocalStackContainer localstack = new LocalStackContainer(DockerImageName.parse("localstack/localstack:3.4.0"))
                 .withServices(S3);
         localstack.start();
         return localstack;

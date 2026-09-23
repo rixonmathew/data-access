@@ -1,4 +1,4 @@
-package com.rixon.ducklake.ducklake_poc;
+package com.rixon.learn.spring.data.ducklake;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -8,7 +8,7 @@ import org.testcontainers.junit.jupiter.EnabledIfDockerAvailable;
 @Import(TestcontainersConfiguration.class)
 @SpringBootTest
 @EnabledIfDockerAvailable
-class DucklakePocApplicationTests {
+class DucklakeApplicationTests {
 
     @Test
     void contextLoads() {

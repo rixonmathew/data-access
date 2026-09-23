@@ -1,3 +1,5 @@
+package com.rixon.learn.spring.data.ducklake;
+
 import java.sql.*;
 
 public class DuckLakeJavaExample {

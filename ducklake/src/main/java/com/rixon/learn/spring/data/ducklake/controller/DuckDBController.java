@@ -1,6 +1,6 @@
-package com.rixon.ducklake.ducklake_poc.controller;
+package com.rixon.learn.spring.data.ducklake.controller;
 
-import com.rixon.ducklake.ducklake_poc.service.DuckDBService;
+import com.rixon.learn.spring.data.ducklake.service.DuckDBService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;

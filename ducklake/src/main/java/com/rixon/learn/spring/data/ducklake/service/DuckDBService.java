@@ -1,6 +1,6 @@
-package com.rixon.ducklake.ducklake_poc.service;
+package com.rixon.learn.spring.data.ducklake.service;
 
-import com.rixon.ducklake.ducklake_poc.config.DuckDBConfig;
+import com.rixon.learn.spring.data.ducklake.config.DuckDBConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.annotation.Autowired;

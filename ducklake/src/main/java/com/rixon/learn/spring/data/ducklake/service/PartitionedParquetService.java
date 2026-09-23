@@ -1,11 +1,11 @@
-package com.rixon.ducklake.ducklake_poc.service;
+package com.rixon.learn.spring.data.ducklake.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericRecord;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.Path;
+import org.apache.parquet.conf.PlainParquetConfiguration;
+import org.apache.parquet.io.LocalOutputFile;
 import org.apache.parquet.avro.AvroParquetWriter;
 import org.apache.parquet.hadoop.ParquetWriter;
 import org.apache.parquet.hadoop.metadata.CompressionCodecName;
@@ -395,11 +395,12 @@ public class PartitionedParquetService {
     }
 
     private void writeParquetFile(Schema schema, List<GenericRecord> records, String outputPath) throws IOException {
-        Configuration conf = new Configuration();
-
-        try (ParquetWriter<GenericRecord> writer = AvroParquetWriter.<GenericRecord>builder(new Path(outputPath))
+        // Write through LocalOutputFile (plain java.nio) rather than the Hadoop FileSystem API:
+        // Hadoop's UserGroupInformation calls Subject.getSubject(), which throws on Java 24+.
+        try (ParquetWriter<GenericRecord> writer = AvroParquetWriter.<GenericRecord>builder(
+                        new LocalOutputFile(java.nio.file.Path.of(outputPath)))
                 .withSchema(schema)
-                .withConf(conf)
+                .withConf(new PlainParquetConfiguration())
                 .withCompressionCodec(CompressionCodecName.SNAPPY)
                 .build()) {
 

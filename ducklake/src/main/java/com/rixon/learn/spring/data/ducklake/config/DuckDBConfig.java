@@ -1,4 +1,4 @@
-package com.rixon.ducklake.ducklake_poc.config;
+package com.rixon.learn.spring.data.ducklake.config;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;

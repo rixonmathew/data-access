@@ -1,13 +1,13 @@
-package com.rixon.ducklake.ducklake_poc;
+package com.rixon.learn.spring.data.ducklake;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class DucklakePocApplication {
+public class DucklakeApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(DucklakePocApplication.class, args);
+        SpringApplication.run(DucklakeApplication.class, args);
     }
 
 }
