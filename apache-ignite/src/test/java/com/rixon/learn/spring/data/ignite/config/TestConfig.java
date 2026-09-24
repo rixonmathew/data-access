@@ -6,6 +6,8 @@ import org.apache.ignite.IgniteCache;
 import org.apache.ignite.Ignition;
 import org.apache.ignite.configuration.CacheConfiguration;
 import org.apache.ignite.configuration.IgniteConfiguration;
+import org.apache.ignite.configuration.SqlConfiguration;
+import org.apache.ignite.calcite.CalciteQueryEngineConfiguration;
 import org.apache.ignite.spi.discovery.tcp.TcpDiscoverySpi;
 import org.apache.ignite.spi.discovery.tcp.ipfinder.vm.TcpDiscoveryVmIpFinder;
 import org.springframework.boot.test.context.TestConfiguration;
@@ -32,6 +34,10 @@ public class TestConfig {
         discoverySpi.setIpFinder(ipFinder);
         cfg.setDiscoverySpi(discoverySpi);
         
+        // Run SQL on the Calcite engine (ignite-calcite) instead of the H2 engine from ignite-indexing
+        cfg.setSqlConfiguration(new SqlConfiguration()
+                .setQueryEnginesConfiguration(new CalciteQueryEngineConfiguration().setDefault(true)));
+
         // Set client mode to false for embedded mode
         cfg.setClientMode(false);
         
