@@ -1,0 +1,16 @@
+spring:
+  application:
+    name: apache-arrow
+  main:
+    # Nothing else keeps the JVM alive: there is no web server, and gRPC's server threads are daemon threads
+    keep-alive: true
+
+arrow:
+  sample-rows: ${ARROW_SAMPLE_ROWS:100000}
+  batch-size: 8192
+  flight:
+    port: ${ARROW_FLIGHT_PORT:47470}
+  flight-sql:
+    port: ${ARROW_FLIGHT_SQL_PORT:47471}
+  username: ${ARROW_USERNAME:arrow}
+  password: ${ARROW_PASSWORD:arrow}

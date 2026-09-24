@@ -56,6 +56,7 @@
 		<module>cdc-outbox</module>
 		<module>trino-federation</module>
 		<module>ducklake</module>
+		<module>apache-arrow</module>
 	</modules>
 
     <dependencyManagement>
