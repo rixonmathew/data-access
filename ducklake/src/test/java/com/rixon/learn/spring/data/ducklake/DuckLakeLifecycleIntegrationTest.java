@@ -62,7 +62,7 @@ class DuckLakeLifecycleIntegrationTest {
 
     @Test
     @Order(1)
-    @DisplayName("Lifecycle: ACID commits, rollback, time travel, change feed, schema & partition evolution, compaction, expiry, cleanup")
+    @DisplayName("Lifecycle: ACID commits, rollback & orphan cleanup, time travel, change feed, schema & partition evolution, compaction, expiry, cleanup")
     void testCompleteDuckLakeLifecycle() throws Exception {
         // 1. Create a table partitioned by ticker. Creating it again is a no-op.
         assertThat(duckLake.createTradesTable(TABLE, List.of("ticker"))).isTrue();
@@ -106,7 +106,7 @@ class DuckLakeLifecycleIntegrationTest {
                         tuple("update_postimage", "T-102", new BigDecimal("126.50")),
                         tuple("insert", "T-106", new BigDecimal("180.00")));
 
-        // 5. Failed transactions leave no trace: no snapshot, no rows
+        // 5. Failed transactions commit nothing: no snapshot, no rows
         assertThatThrownBy(() -> duckLake.appendTrades(TABLE, List.of(
                 trade("T-107", "AAPL", "223.00", 5, "2026-01-09"),
                 trade("T-108", null, "99.00", 5, "2026-01-09"))))   // ticker is NOT NULL
@@ -120,6 +120,18 @@ class DuckLakeLifecycleIntegrationTest {
         assertThat(duckLake.currentSnapshotId()).isEqualTo(s4);
         assertThat(duckLake.findTrades(TABLE, null)).extracting(Trade::getTradeId)
                 .containsExactly("T-101", "T-102", "T-103", "T-104", "T-105", "T-106");
+
+        // The failing INSERT had already written Parquet for its NULL-ticker row before the constraint check
+        // aborted it. The catalog never references that file; ducklake_delete_orphaned_files removes it.
+        // Files replaced by the price correction are not orphans: older snapshots still reference them.
+        List<String> objectsAfterRollback = s3Keys(TABLE);
+        List<String> orphans = duckLake.deleteOrphanedFiles();
+        assertThat(orphans).singleElement().asString()
+                .contains("/" + TABLE + "/ticker=__HIVE_DEFAULT_PARTITION__/");
+        assertThat(s3Keys(TABLE)).hasSize(objectsAfterRollback.size() - 1)
+                .allSatisfy(key -> assertThat(key).doesNotContain("__HIVE_DEFAULT_PARTITION__"));
+        assertThat(duckLake.listDataFiles(TABLE)).extracting(DuckLakeDataFile::getDataFile)
+                .allSatisfy(path -> assertThat(objectsAfterRollback).anySatisfy(key -> assertThat(path).endsWith(key)));
 
         // 6. Time travel by version and by timestamp
         assertThat(duckLake.findTrades(TABLE, createdSnapshot)).isEmpty();
@@ -229,6 +241,10 @@ class DuckLakeLifecycleIntegrationTest {
                 .filter(s -> s.getSnapshotId() == id)
                 .findFirst()
                 .orElseThrow();
+    }
+
+    private List<String> s3Keys(String table) {
+        return tableObjectsInS3(table).stream().map(S3Object::key).toList();
     }
 
     private List<S3Object> tableObjectsInS3(String table) {

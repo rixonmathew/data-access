@@ -62,7 +62,7 @@ One ordered test on a `trades` table partitioned by `ticker`:
 | 2 | ACID commit | 3 rows in one commit = **one snapshot**, **one Parquet object per partition** in S3 (`ticker=AAPL/`, `NVDA`, `MSFT`) |
 | 3 | Small commits | Each commit adds one snapshot and one AAPL file (3 AAPL files, compacted later) |
 | 4 | Multi-statement transaction | An `UPDATE` and an `INSERT` land in the same snapshot; the change feed (`table_changes`) shows `update_preimage` 125.00, `update_postimage` 126.50 and `insert` |
-| 5 | Rollback | A batch that fails on a `NOT NULL` column, and a correction for an unknown trade, both roll back fully: **no new snapshot, no rows** |
+| 5 | Rollback + orphan cleanup | A batch that fails on a `NOT NULL` column, and a correction for an unknown trade, both roll back fully: **no new snapshot, no rows**. The failing insert had already written a Parquet object (`ticker=__HIVE_DEFAULT_PARTITION__/`) that the catalog never references; `ducklake_delete_orphaned_files` deletes exactly that object from S3 and keeps files older snapshots still need |
 | 6 | Time travel | `AT (VERSION => n)` returns the 3 original rows and the pre-correction price; `AT (TIMESTAMP => ...)` resolves the same snapshot from its `snapshot_time` |
 | 7 | Schema evolution | `ADD COLUMN venue` bumps `schema_version` without rewriting files; old rows read `NULL`, and `DESCRIBE ... AT (VERSION => n)` still shows the old 5 columns |
 | 8 | Partition evolution | `SET PARTITIONED BY (year(trade_date), month(trade_date))`: the new file goes to `year=2026/month=2/`, every existing `ticker=` file is kept as is |
@@ -129,7 +129,8 @@ The app, with the local catalog:
 
 ```bash
 mvn -pl ducklake -am package -DskipTests
-java -jar ducklake/target/ducklake-0.0.1-SNAPSHOT.jar
+cd ducklake   # data_files/ is created in the working directory (git-ignored here)
+java -jar target/ducklake-0.0.1-SNAPSHOT.jar
 
 curl -X POST localhost:8080/api/ducklake/tables/trades/trades -H 'Content-Type: application/json' \
   -d '[{"tradeId":"T-1","ticker":"AAPL","price":220.50,"quantity":100,"tradeDate":"2026-01-05"}]'

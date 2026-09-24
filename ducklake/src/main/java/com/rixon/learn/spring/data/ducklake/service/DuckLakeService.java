@@ -346,6 +346,19 @@ public class DuckLakeService {
                 .toList();
     }
 
+    /**
+     * Deletes files under the data path that the catalog has never referenced, e.g. Parquet written by a
+     * statement whose transaction then failed and rolled back.
+     *
+     * @return the deleted file paths
+     */
+    public List<String> deleteOrphanedFiles() throws SQLException {
+        return duckDB.executeQuery("CALL ducklake_delete_orphaned_files(%s, cleanup_all => true)"
+                        .formatted(literal(catalog))).stream()
+                .map(row -> (String) row.get("path"))
+                .toList();
+    }
+
     // ---------------------------------------------------------------- helpers
 
     private List<Trade> queryTrades(String sql) throws SQLException {
