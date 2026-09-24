@@ -23,6 +23,13 @@ public class DuckLakeProperties {
      */
     private Integer dataInliningRowLimit;
 
+    /**
+     * Build of the {@code ducklake} extension this module was tested with. DuckDB downloads extensions at
+     * runtime, so a new machine or a republished build can load different code; startup fails if the loaded
+     * build differs. Set to an empty value to skip the check.
+     */
+    private String expectedExtensionVersion = "d8a1881e";
+
     private Catalog catalog = new Catalog();
 
     private S3 s3 = new S3();

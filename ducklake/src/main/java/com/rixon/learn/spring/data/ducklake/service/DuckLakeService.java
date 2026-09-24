@@ -8,6 +8,7 @@ import com.rixon.learn.spring.data.ducklake.model.Trade;
 import com.rixon.learn.spring.data.ducklake.model.TradeChange;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.io.File;
 import java.math.BigDecimal;
@@ -56,6 +57,7 @@ public class DuckLakeService {
         try (Connection conn = duckDB.openConnection(); Statement stmt = conn.createStatement()) {
             stmt.execute("INSTALL ducklake");
             stmt.execute("LOAD ducklake");
+            verifyExtensionVersion(stmt, properties.getExpectedExtensionVersion());
             if (cfg.getType() == DuckLakeProperties.CatalogType.POSTGRES) {
                 stmt.execute("INSTALL postgres");
                 stmt.execute("LOAD postgres");
@@ -90,6 +92,26 @@ public class DuckLakeService {
         }
         log.info("DuckLake catalog '{}' attached ({} metadata, data path {})",
                 catalog, cfg.getType(), properties.getDataPath());
+    }
+
+    private static void verifyExtensionVersion(Statement stmt, String expected) throws SQLException {
+        String duckdbVersion;
+        String ducklakeVersion;
+        try (ResultSet rs = stmt.executeQuery("""
+                SELECT version() AS duckdb_version, extension_version
+                FROM duckdb_extensions() WHERE extension_name = 'ducklake'""")) {
+            if (!rs.next()) {
+                throw new IllegalStateException("ducklake extension is not loaded");
+            }
+            duckdbVersion = rs.getString("duckdb_version");
+            ducklakeVersion = rs.getString("extension_version");
+        }
+        log.info("DuckDB {} with ducklake extension build {}", duckdbVersion, ducklakeVersion);
+        if (StringUtils.hasText(expected) && !expected.equals(ducklakeVersion)) {
+            throw new IllegalStateException(("ducklake extension build %s is loaded but this module was tested with %s. "
+                    + "Re-run the tests and update ducklake.expected-extension-version, or set it to an empty value "
+                    + "to skip this check.").formatted(ducklakeVersion, expected));
+        }
     }
 
     public String getCatalog() {

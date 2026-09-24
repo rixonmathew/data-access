@@ -98,6 +98,29 @@ Invalid table names and constraint violations return `400`.
 
 ---
 
+## 📌 Versions
+
+| Component | Version | Where it comes from |
+| :--- | :--- | :--- |
+| DuckDB engine | `1.5.5` | `org.duckdb:duckdb_jdbc:1.5.5.1` in `pom.xml` (the engine is inside the JDBC jar) |
+| `ducklake` extension | build `d8a1881e` | Downloaded by `INSTALL ducklake` from DuckDB's core extension repository |
+| DuckLake catalog format | `1.0` | Written by the extension to `ducklake_metadata` (`key = 'version'`) |
+| `httpfs` / `postgres_scanner` | `827222f` / `41223e5` | Also downloaded at runtime; not checked |
+
+The JDBC jar fixes the DuckDB version, but not the extensions. DuckDB downloads them on first use into `~/.duckdb/extensions/v1.5.5/`, and it can publish a fixed build for the same release. So a new machine, or a cleared cache, may load a `ducklake` build these tests never ran against.
+
+To catch that, `DuckLakeService` checks the loaded build at startup, before it attaches the catalog:
+
+```
+DuckDB v1.5.5 with ducklake extension build d8a1881e
+```
+
+If the build differs from `ducklake.expected-extension-version` (env `DUCKLAKE_EXTENSION_VERSION`, default `d8a1881e`), startup fails with a message naming both builds. Set it to an empty value to skip the check. `DuckLakeExtensionVersionTest` covers the match, mismatch and skip cases.
+
+**Upgrading DuckDB or the extension:** bump `duckdb.version` in `pom.xml` and run once with `DUCKLAKE_EXTENSION_VERSION=` so the check is skipped. Read the new build from the startup log, or run `SELECT extension_version FROM duckdb_extensions() WHERE extension_name = 'ducklake'`. Then run `mvn verify -pl ducklake -am`, and once it passes, put the new build in `DuckLakeProperties`, `application.yml` and the table above.
+
+---
+
 ## 🛠️ Configuration
 
 `DuckLakeProperties` binds the `ducklake.*` properties. By default (`application.yml`) the app needs **no infrastructure**: the catalog is a local DuckDB file (`data_files/catalog.ducklake`), data files go to `data_files/lake/`, and small inserts are inlined into the catalog until flushed. Environment variables switch to PostgreSQL and S3:
@@ -110,8 +133,9 @@ Invalid table names and constraint violations return `400`.
 | `DUCKLAKE_DATA_PATH` | `ducklake.data-path` | `data_files/lake/` (or `s3://bucket/prefix/`) |
 | `DUCKLAKE_S3_ENDPOINT` | `ducklake.s3.endpoint` | empty = no S3 secret (e.g. `localhost:4566`) |
 | `DUCKLAKE_S3_REGION` / `_ACCESS_KEY_ID` / `_SECRET_ACCESS_KEY` | `ducklake.s3.*` | `us-east-1` / — / — |
+| `DUCKLAKE_EXTENSION_VERSION` | `ducklake.expected-extension-version` | `d8a1881e` (empty = no check) |
 
-`ducklake.data-inlining-row-limit` sets the catalog-wide inlining threshold (0 disables it). The PostgreSQL password is passed through a DuckDB `postgres` secret, not embedded in the `ATTACH` string.
+`ducklake.data-inlining-row-limit` sets the catalog-wide inlining threshold (0 disables it). `ducklake.expected-extension-version` is described under [Versions](#-versions). The PostgreSQL password is passed through a DuckDB `postgres` secret, not embedded in the `ATTACH` string.
 
 Generated output (`data_files/`) is git-ignored.
 

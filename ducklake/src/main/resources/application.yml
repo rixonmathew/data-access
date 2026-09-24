@@ -8,6 +8,8 @@ spring:
 # DUCKLAKE_S3_* to write data files to S3.
 ducklake:
   catalog-alias: lake
+  # ducklake extension build the tests passed with; startup fails on any other build (empty = no check)
+  expected-extension-version: ${DUCKLAKE_EXTENSION_VERSION:d8a1881e}
   data-path: ${DUCKLAKE_DATA_PATH:data_files/lake/}
   catalog:
     type: ${DUCKLAKE_CATALOG_TYPE:duckdb}
