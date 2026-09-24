@@ -60,13 +60,14 @@ flowchart TD
         DL["delta-lake\n(Delta Lake ACID Lakehouse)"]
         ICE["apache-iceberg\n(Apache Iceberg Open Lakehouse)"]
         DKL["ducklake\n(DuckLake + PostgreSQL Catalog)"]
+        ARW["apache-arrow\n(Arrow + Flight / Flight SQL)"]
         TRINO["trino-federation\n(Trino Distributed SQL)"]
         TS["trinospark\n(Distributed Queries)"]
     end
 
     Accounts --> PG & CR
     Orders --> MG & DDB & CS & CDC & TRINO
-    Quotes --> RD & RCS & CH & DK & DL & ICE & DKL
+    Quotes --> RD & RCS & CH & DK & DL & ICE & DKL & ARW
     Exposure --> NJ
     Research --> QD & PG
     Orders --> ORA & H2 & SQLITE
@@ -93,6 +94,7 @@ flowchart TD
 | [**`delta-lake`**](delta-lake/README.md) | Lakehouse Storage | `localstack:3.4.0` (S3) | Delta Lake ACID transactions, commit log (`_delta_log`), Time Travel (`VERSION AS OF 0` vs `1`), Schema Evolution (`ADD_COLUMNS`), DuckDB Parquet querying, LocalStack S3 sync. | ✅ **100% Green** |
 | [**`apache-iceberg`**](apache-iceberg/README.md) | Open Lakehouse | `localstack:3.4.0` (S3) | Apache Iceberg ACID transactions, metadata tree (`metadata.json`, manifest lists, manifests), Hidden Partitioning, in-place zero-copy Partition Evolution, Schema Evolution with field ID tracking, Time Travel snapshots, Snapshot Rollback, DuckDB analytics, LocalStack S3 replication. | ✅ **100% Green** |
 | [**`ducklake`**](ducklake/README.md) | SQL-Catalog Lakehouse | `postgres:17` & `localstack:3.4.0` (S3) | DuckLake open table format on embedded DuckDB 1.5: PostgreSQL metadata catalog with Parquet data files on S3, one snapshot per ACID commit, multi-statement transactions and rollback, Time Travel (`AT (VERSION => n)` / `AT (TIMESTAMP => ...)`), change feed (`table_changes`), Schema Evolution (`ADD COLUMN`), Partition Evolution (`ticker` → `year/month`), data inlining and flush, compaction, snapshot expiry and S3 file cleanup, Hive-partitioned Parquet pruning, REST API. | ✅ **100% Green** |
+| [**`apache-arrow`**](apache-arrow/README.md) | Columnar Format & Transport | none (in-process) | Apache Arrow 19 on Java 25: column vectors with validity bitmaps, zero-copy slicing, IPC stream/file formats, LZ4/ZSTD compression, dictionary encoding; zero-copy DuckDB ⇄ Arrow via the C Data Interface; Arrow Flight server (bearer-token auth, per-ticker endpoints fetched in parallel, DoPut datasets, DoExchange, custom actions); Flight SQL over DuckDB queried through the Flight SQL JDBC driver (prepared parameters, batch updates, metadata); JDBC vs Arrow vs Flight transfer benchmark. | ✅ **100% Green** |
 | [**`aws-s3`**](aws-s3/README.md) | Object Storage | `localstack:3.4.0` (S3) | Automated S3 bucket provisioning, high-throughput CSV batch streaming of instrument market data, metadata verification via `HeadObject`. | ✅ **100% Green** |
 | [**`oracle26ai`**](oracle26ai/README.md) | Enterprise SQL (R2DBC) | Oracle Cloud R2DBC | Non-blocking reactive streaming of financial instruments, Spring Data R2DBC repository queries, transient entity mapping compatibility. | ✅ **100% Green** |
 | [**`sqlite3`**](sqlite3/README.md) | Embedded Relational | In-Memory / File | High-speed local embedded relational queries, transaction boundaries, and mock data verification. | ✅ **100% Green** |
