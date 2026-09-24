@@ -57,6 +57,7 @@
 		<module>trino-federation</module>
 		<module>ducklake</module>
 		<module>apache-arrow</module>
+		<module>apache-age</module>
 	</modules>
 
     <dependencyManagement>

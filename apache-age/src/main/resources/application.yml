@@ -1,0 +1,14 @@
+spring:
+  application:
+    name: apache-age
+  datasource:
+    url: ${AGE_JDBC_URL:jdbc:postgresql://localhost:5432/agedb}
+    username: ${AGE_USERNAME:age}
+    password: ${AGE_PASSWORD:age}
+    hikari:
+      # `public` first so ordinary CREATE TABLE lands in public, not in AGE's ag_catalog schema.
+      # The apache/age image preloads the extension (shared_preload_libraries = age), so no LOAD 'age' is needed.
+      connection-init-sql: SET search_path = public, ag_catalog
+
+age:
+  graph: ${AGE_GRAPH:counterparty_risk}
