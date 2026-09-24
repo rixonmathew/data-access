@@ -10,6 +10,10 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Ad-hoc access to the embedded DuckDB engine. {@code /query} runs arbitrary SQL by design:
+ * this is a local exploration endpoint, not something to expose publicly.
+ */
 @Slf4j
 @RestController
 @RequestMapping("/api/duckdb")
@@ -19,28 +23,27 @@ public class DuckDBController {
     private final DuckDBService duckDBService;
 
     /**
-     * Creates a table from S3 data
+     * Creates a table from a local file or an S3 object.
      *
      * @param tableName The name of the table to create
-     * @param s3Path The S3 path to the data
-     * @param format The format of the data (e.g., CSV, Parquet)
-     * @return ResponseEntity with success or error message
+     * @param path Local path or {@code s3://bucket/key}
+     * @param format CSV or PARQUET
      */
     @PostMapping("/tables")
     public ResponseEntity<?> createTable(
             @RequestParam String tableName,
-            @RequestParam String s3Path,
+            @RequestParam String path,
             @RequestParam String format) {
 
         try {
-            duckDBService.createTableFromS3(tableName, s3Path, format);
+            duckDBService.createTableFromFile(tableName, path, format);
             return ResponseEntity.ok(Map.of(
                 "message", "Table created successfully",
                 "tableName", tableName,
-                "s3Path", s3Path
+                "path", path
             ));
-        } catch (SQLException e) {
-            log.error("Error creating table from S3", e);
+        } catch (SQLException | IllegalArgumentException e) {
+            log.error("Error creating table from {}", path, e);
             return ResponseEntity.badRequest().body(Map.of(
                 "error", "Failed to create table",
                 "message", e.getMessage()
@@ -49,31 +52,27 @@ public class DuckDBController {
     }
 
     /**
-     * Executes a SQL query against DuckDB
+     * Executes a SQL query or statement against DuckDB.
      *
-     * @param query The SQL query to execute
-     * @return ResponseEntity with query results or error message
+     * @param query The SQL to execute
      */
     @PostMapping("/query")
     public ResponseEntity<?> executeQuery(@RequestBody String query) {
         try {
-            // Determine if this is a query that returns results or a statement
             String upperQuery = query.trim().toUpperCase();
-            if (upperQuery.startsWith("SELECT") || upperQuery.startsWith("SHOW") || 
-                upperQuery.startsWith("DESCRIBE") || upperQuery.startsWith("EXPLAIN")) {
-                // This is a query that returns results
+            if (upperQuery.startsWith("SELECT") || upperQuery.startsWith("WITH") || upperQuery.startsWith("FROM")
+                    || upperQuery.startsWith("SHOW") || upperQuery.startsWith("DESCRIBE")
+                    || upperQuery.startsWith("EXPLAIN") || upperQuery.startsWith("CALL")) {
                 List<Map<String, Object>> results = duckDBService.executeQuery(query);
                 return ResponseEntity.ok(Map.of(
                     "results", results,
                     "count", results.size()
                 ));
-            } else {
-                // This is a statement that doesn't return results
-                duckDBService.executeStatement(query);
-                return ResponseEntity.ok(Map.of(
-                    "message", "Statement executed successfully"
-                ));
             }
+            duckDBService.executeStatement(query);
+            return ResponseEntity.ok(Map.of(
+                "message", "Statement executed successfully"
+            ));
         } catch (SQLException e) {
             log.error("Error executing query", e);
             return ResponseEntity.badRequest().body(Map.of(
@@ -84,22 +83,21 @@ public class DuckDBController {
     }
 
     /**
-     * Gets all data from a table
+     * Gets all rows of a table in the default in-memory database.
      *
      * @param tableName The name of the table to query
-     * @return ResponseEntity with table data or error message
      */
     @GetMapping("/tables/{tableName}")
     public ResponseEntity<?> getTableData(@PathVariable String tableName) {
         try {
-            String query = String.format("SELECT * FROM %s", tableName);
-            List<Map<String, Object>> results = duckDBService.executeQuery(query);
+            List<Map<String, Object>> results = duckDBService.executeQuery(
+                    "SELECT * FROM " + DuckDBService.identifier(tableName));
             return ResponseEntity.ok(Map.of(
                 "tableName", tableName,
                 "results", results,
                 "count", results.size()
             ));
-        } catch (SQLException e) {
+        } catch (SQLException | IllegalArgumentException e) {
             log.error("Error fetching table data", e);
             return ResponseEntity.badRequest().body(Map.of(
                 "error", "Failed to fetch table data",

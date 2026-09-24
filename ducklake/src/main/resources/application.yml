@@ -1,0 +1,24 @@
+spring:
+  application:
+    name: ducklake
+
+# Out of the box the app runs with no infrastructure: the DuckLake catalog is a local DuckDB
+# file and data files go to data_files/lake/ (git-ignored). Set DUCKLAKE_CATALOG_TYPE=postgres
+# (plus the DUCKLAKE_PG_* variables) to keep the catalog in PostgreSQL, and DUCKLAKE_DATA_PATH /
+# DUCKLAKE_S3_* to write data files to S3.
+ducklake:
+  catalog-alias: lake
+  data-path: ${DUCKLAKE_DATA_PATH:data_files/lake/}
+  catalog:
+    type: ${DUCKLAKE_CATALOG_TYPE:duckdb}
+    path: data_files/catalog.ducklake
+    host: ${DUCKLAKE_PG_HOST:localhost}
+    port: ${DUCKLAKE_PG_PORT:5432}
+    database: ${DUCKLAKE_PG_DB:ducklake_catalog}
+    username: ${DUCKLAKE_PG_USER:}
+    password: ${DUCKLAKE_PG_PASSWORD:}
+  s3:
+    endpoint: ${DUCKLAKE_S3_ENDPOINT:}
+    region: ${DUCKLAKE_S3_REGION:us-east-1}
+    access-key-id: ${DUCKLAKE_S3_ACCESS_KEY_ID:}
+    secret-access-key: ${DUCKLAKE_S3_SECRET_ACCESS_KEY:}

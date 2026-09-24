@@ -53,7 +53,7 @@
             <optional>true</optional>
         </dependency>
 
-        <!-- Avro / Parquet / Hadoop for writing partitioned Parquet files -->
+        <!-- Avro / Parquet for writing partitioned Parquet files; parquet-hadoop still needs hadoop-common on the classpath -->
         <dependency>
             <groupId>org.apache.avro</groupId>
             <artifactId>avro</artifactId>
@@ -71,7 +71,7 @@
         </dependency>
         <dependency>
             <groupId>org.apache.hadoop</groupId>
-            <artifactId>hadoop-client</artifactId>
+            <artifactId>hadoop-common</artifactId>
             <version>${hadoop.version}</version>
             <exclusions>
                 <exclusion>

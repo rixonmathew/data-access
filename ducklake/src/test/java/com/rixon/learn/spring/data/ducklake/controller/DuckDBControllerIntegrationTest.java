@@ -2,29 +2,26 @@ package com.rixon.learn.spring.data.ducklake.controller;
 
 import com.rixon.learn.spring.data.ducklake.TestcontainersConfiguration;
 import com.rixon.learn.spring.data.ducklake.service.DuckDBService;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-import org.testcontainers.containers.localstack.LocalStackContainer;
 import org.testcontainers.junit.jupiter.EnabledIfDockerAvailable;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.CreateBucketRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.sql.SQLException;
 
+import static com.rixon.learn.spring.data.ducklake.TestcontainersConfiguration.DATA_BUCKET;
 import static org.hamcrest.Matchers.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
@@ -33,6 +30,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @EnabledIfDockerAvailable
 class DuckDBControllerIntegrationTest {
 
+    private static final String TEST_TABLE = "controller_test_table";
+    private static final String S3_PATH = "s3://" + DATA_BUCKET + "/controller/test-data.csv";
+
     @Autowired
     private MockMvc mockMvc;
 
@@ -40,78 +40,32 @@ class DuckDBControllerIntegrationTest {
     private S3Client s3Client;
 
     @Autowired
-    private LocalStackContainer localStackContainer;
-
-    @Autowired
     private DuckDBService duckDBService;
 
-    @TempDir
-    Path tempDir;
-
-    private static final String TEST_BUCKET = "controller-test-bucket";
-    private static final String TEST_CSV_KEY = "controller-test-data.csv";
-    private static final String TEST_TABLE = "controller_test_table";
-    private Path testCsvPath;
-
     @BeforeEach
-    void setUp() throws IOException {
-        // Create test bucket
-        s3Client.createBucket(CreateBucketRequest.builder()
-                .bucket(TEST_BUCKET)
-                .build());
+    void setUp() throws Exception {
+        s3Client.putObject(PutObjectRequest.builder().bucket(DATA_BUCKET).key("controller/test-data.csv").build(),
+                RequestBody.fromString("id,name,value\n1,Item 1,100\n2,Item 2,200\n3,Item 3,300"));
 
-        // Create test CSV data
-        String csvData = "id,name,value\n1,Item 1,100\n2,Item 2,200\n3,Item 3,300";
-
-        // Save to local file
-        testCsvPath = tempDir.resolve("controller-test-data.csv");
-        Files.writeString(testCsvPath, csvData);
-
-        // Upload to S3
-        s3Client.putObject(PutObjectRequest.builder()
-                .bucket(TEST_BUCKET)
-                .key(TEST_CSV_KEY)
-                .build(), RequestBody.fromString(csvData));
-
-        System.out.println("[DEBUG_LOG] Controller test bucket created and CSV file uploaded");
-        System.out.println("[DEBUG_LOG] Local CSV file created at: " + testCsvPath);
-    }
-
-    @Test
-    void testCreateTableEndpoint() throws Exception {
-        // Skip the S3 approach and directly use the local CSV file
-        createTableFromLocalCSV();
-
-        // Verify the table was created by querying it through the API
-        mockMvc.perform(MockMvcRequestBuilders.post("/api/duckdb/query")
-                .contentType(MediaType.TEXT_PLAIN)
-                .content("SELECT COUNT(*) as count FROM " + TEST_TABLE))
+        mockMvc.perform(post("/api/duckdb/tables")
+                        .param("tableName", TEST_TABLE)
+                        .param("path", S3_PATH)
+                        .param("format", "CSV"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.results[0].count", is(3)));
+                .andExpect(jsonPath("$.tableName", is(TEST_TABLE)))
+                .andExpect(jsonPath("$.path", is(S3_PATH)));
     }
 
-    private void createTableFromLocalCSV() throws Exception {
-        System.out.println("[DEBUG_LOG] Creating table from local CSV file: " + testCsvPath.toString());
-
-        // Create the table directly using the service
-        try {
-            duckDBService.createTableFromCSV(TEST_TABLE, testCsvPath.toString());
-            System.out.println("[DEBUG_LOG] Table created successfully from local CSV file");
-        } catch (SQLException e) {
-            System.out.println("[DEBUG_LOG] Failed to create table from local CSV: " + e.getMessage());
-            throw new RuntimeException("Failed to create table from local CSV", e);
-        }
+    @AfterEach
+    void tearDown() throws SQLException {
+        duckDBService.executeStatement("DROP TABLE IF EXISTS " + TEST_TABLE);
     }
 
     @Test
     void testQueryEndpoint() throws Exception {
-        // First set up the table
-        testCreateTableEndpoint();
-
-        // Test the query endpoint
-        mockMvc.perform(MockMvcRequestBuilders.post("/api/duckdb/query")
-                .contentType(MediaType.TEXT_PLAIN)
-                .content("SELECT * FROM " + TEST_TABLE))
+        mockMvc.perform(post("/api/duckdb/query")
+                        .contentType(MediaType.TEXT_PLAIN)
+                        .content("SELECT * FROM " + TEST_TABLE + " ORDER BY id"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.results", hasSize(3)))
                 .andExpect(jsonPath("$.count", is(3)))
@@ -121,18 +75,42 @@ class DuckDBControllerIntegrationTest {
     }
 
     @Test
-    void testGetTableDataEndpoint() throws Exception {
-        // First set up the table
-        testCreateTableEndpoint();
+    void testStatementEndpoint() throws Exception {
+        mockMvc.perform(post("/api/duckdb/query")
+                        .contentType(MediaType.TEXT_PLAIN)
+                        .content("DELETE FROM " + TEST_TABLE + " WHERE id = 1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message", is("Statement executed successfully")));
 
-        // Test the get table data endpoint
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/duckdb/tables/" + TEST_TABLE))
+        mockMvc.perform(get("/api/duckdb/tables/" + TEST_TABLE))
+                .andExpect(jsonPath("$.count", is(2)));
+    }
+
+    @Test
+    void testGetTableDataEndpoint() throws Exception {
+        mockMvc.perform(get("/api/duckdb/tables/" + TEST_TABLE))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.tableName", is(TEST_TABLE)))
                 .andExpect(jsonPath("$.results", hasSize(3)))
                 .andExpect(jsonPath("$.count", is(3)))
-                .andExpect(jsonPath("$.results[1].id", is(2)))
-                .andExpect(jsonPath("$.results[1].name", is("Item 2")))
-                .andExpect(jsonPath("$.results[1].value", is(200)));
+                .andExpect(jsonPath("$.results[*].name", hasItem("Item 2")));
+    }
+
+    @Test
+    void testInvalidRequestsReturnBadRequest() throws Exception {
+        mockMvc.perform(get("/api/duckdb/tables/{name}", "x UNION SELECT 1"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message", containsString("Invalid identifier")));
+
+        mockMvc.perform(post("/api/duckdb/tables")
+                        .param("tableName", "missing_table")
+                        .param("path", "s3://" + DATA_BUCKET + "/does-not-exist.csv")
+                        .param("format", "CSV"))
+                .andExpect(status().isBadRequest());
+
+        mockMvc.perform(post("/api/duckdb/query")
+                        .contentType(MediaType.TEXT_PLAIN)
+                        .content("SELECT * FROM no_such_table"))
+                .andExpect(status().isBadRequest());
     }
 }

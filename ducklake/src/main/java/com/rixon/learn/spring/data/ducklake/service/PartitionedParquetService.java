@@ -17,7 +17,6 @@ import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.function.Function;
@@ -153,183 +152,28 @@ public class PartitionedParquetService {
     }
 
     /**
-     * Queries partitioned Parquet files using DuckDB.
+     * Queries Hive-partitioned Parquet files ({@code col=value/} directories) under a local
+     * directory or an {@code s3://bucket/prefix}. A view named {@code viewName} is created over
+     * all files so partition columns can be filtered on (and pruned) like normal columns.
      *
-     * @param tableName The name of the table to create
-     * @param s3Path The S3 path to the partitioned Parquet files (e.g., s3://bucket/prefix)
-     * @param partitionColumns The columns used for partitioning
+     * @param viewName The name of the view to create over the files
+     * @param rootPath Local directory or S3 prefix containing the partition directories
      * @param query The SQL query to execute (if null, selects all data)
      * @return The query results
-     * @throws SQLException If there's an error executing the query
+     * @throws SQLException If the files cannot be read or the query fails
      */
     public List<Map<String, Object>> queryPartitionedParquetFiles(
-            String tableName,
-            String s3Path,
-            List<String> partitionColumns,
+            String viewName,
+            String rootPath,
             String query) throws SQLException {
 
-        log.info("Querying partitioned Parquet files at: {}", s3Path);
+        String root = rootPath.endsWith("/") ? rootPath.substring(0, rootPath.length() - 1) : rootPath;
+        duckDBService.executeStatement(String.format(
+                "CREATE OR REPLACE VIEW %s AS SELECT * FROM read_parquet(%s, hive_partitioning = true)",
+                DuckDBService.identifier(viewName), DuckDBService.literal(root + "/**/*.parquet")));
+        log.info("Created view {} over partitioned Parquet files at {}", viewName, root);
 
-        try {
-            // First, try to list files to verify S3 access
-            try {
-                List<Map<String, Object>> listResults = duckDBService.executeQuery(
-                    "SELECT * FROM s3_list_directories('" + s3Path + "')"
-                );
-                log.info("S3 directories found: {}", listResults);
-            } catch (SQLException e) {
-                log.warn("Error listing S3 directories: {}. Will try direct query anyway.", e.getMessage());
-            }
-
-            // Create a view over the partitioned Parquet files
-            // Use glob pattern to find all parquet files in subdirectories
-            String createViewSql = String.format(
-                    "CREATE OR REPLACE VIEW %s AS SELECT * FROM parquet_scan('%s/**/*.parquet', hive_partitioning=1)",
-                    tableName, s3Path);
-
-            duckDBService.executeStatement(createViewSql);
-            log.info("Created view {} over partitioned Parquet files at {}", tableName, s3Path);
-
-            // Execute the query
-            if (query == null) {
-                query = "SELECT * FROM " + tableName;
-            }
-
-            return duckDBService.executeQuery(query);
-        } catch (SQLException e) {
-            log.error("Error querying partitioned Parquet files: {}", e.getMessage());
-
-            // Try an alternative approach without the glob pattern
-            log.info("Trying alternative approach without glob pattern...");
-            String altCreateViewSql = String.format(
-                    "CREATE OR REPLACE VIEW %s AS SELECT * FROM parquet_scan('%s', hive_partitioning=1)",
-                    tableName, s3Path);
-
-            try {
-                duckDBService.executeStatement(altCreateViewSql);
-                log.info("Created view {} over partitioned Parquet files at {} (alternative approach)", tableName, s3Path);
-
-                if (query == null) {
-                    query = "SELECT * FROM " + tableName;
-                }
-
-                return duckDBService.executeQuery(query);
-            } catch (SQLException ex) {
-                log.error("Alternative approach also failed: {}", ex.getMessage());
-                throw new SQLException("Failed to query partitioned Parquet files at " + s3Path, e);
-            }
-        }
-    }
-
-    /**
-     * Queries partitioned Parquet files from a local directory using DuckDB.
-     *
-     * @param tableName The name of the table to create
-     * @param localDir The local directory containing partitioned Parquet files
-     * @param partitionColumns The columns used for partitioning
-     * @param query The SQL query to execute (if null, selects all data)
-     * @return The query results
-     * @throws SQLException If there's an error executing the query
-     */
-    public List<Map<String, Object>> queryLocalPartitionedParquetFiles(
-            String tableName,
-            String localDir,
-            List<String> partitionColumns,
-            String query) throws SQLException {
-
-        log.info("Querying local partitioned Parquet files at: {}", localDir);
-
-        try {
-            // Create a view over the partitioned Parquet files
-            // Use glob pattern to find all parquet files in subdirectories
-            String createViewSql = String.format(
-                    "CREATE OR REPLACE VIEW %s AS SELECT * FROM parquet_scan('%s/**/*.parquet', hive_partitioning=1)",
-                    tableName, localDir);
-
-            duckDBService.executeStatement(createViewSql);
-            log.info("Created view {} over local partitioned Parquet files at {}", tableName, localDir);
-
-            // Execute the query
-            if (query == null) {
-                query = "SELECT * FROM " + tableName;
-            }
-
-            return duckDBService.executeQuery(query);
-        } catch (SQLException e) {
-            log.error("Error querying local partitioned Parquet files: {}", e.getMessage());
-
-            // Try an alternative approach without the glob pattern
-            log.info("Trying alternative approach without glob pattern...");
-            String altCreateViewSql = String.format(
-                    "CREATE OR REPLACE VIEW %s AS SELECT * FROM parquet_scan('%s', hive_partitioning=1)",
-                    tableName, localDir);
-
-            try {
-                duckDBService.executeStatement(altCreateViewSql);
-                log.info("Created view {} over local partitioned Parquet files at {} (alternative approach)", tableName, localDir);
-
-                if (query == null) {
-                    query = "SELECT * FROM " + tableName;
-                }
-
-                return duckDBService.executeQuery(query);
-            } catch (SQLException ex) {
-                log.error("Alternative approach also failed: {}", ex.getMessage());
-
-                // Try one more approach with explicit file listing
-                log.info("Trying approach with explicit file listing...");
-                try {
-                    // List all parquet files in the directory and its subdirectories
-                    List<String> parquetFiles = findParquetFiles(localDir);
-                    if (parquetFiles.isEmpty()) {
-                        throw new SQLException("No Parquet files found in " + localDir);
-                    }
-
-                    // Create a table from the first file
-                    String firstFile = parquetFiles.get(0);
-                    String createTableSql = String.format(
-                            "CREATE OR REPLACE VIEW %s AS SELECT * FROM parquet_scan('%s')",
-                            tableName, firstFile);
-                    duckDBService.executeStatement(createTableSql);
-                    log.info("Created view {} from first Parquet file: {}", tableName, firstFile);
-
-                    if (query == null) {
-                        query = "SELECT * FROM " + tableName;
-                    }
-
-                    return duckDBService.executeQuery(query);
-                } catch (Exception listEx) {
-                    log.error("All approaches failed: {}", listEx.getMessage());
-                    throw new SQLException("Failed to query local partitioned Parquet files at " + localDir, e);
-                }
-            }
-        }
-    }
-
-    private List<String> findParquetFiles(String directory) {
-        List<String> result = new ArrayList<>();
-        File dir = new File(directory);
-        findParquetFilesRecursive(dir, result);
-        return result;
-    }
-
-    private void findParquetFilesRecursive(File dir, List<String> result) {
-        if (!dir.exists() || !dir.isDirectory()) {
-            return;
-        }
-
-        File[] files = dir.listFiles();
-        if (files == null) {
-            return;
-        }
-
-        for (File file : files) {
-            if (file.isDirectory()) {
-                findParquetFilesRecursive(file, result);
-            } else if (file.getName().endsWith(".parquet")) {
-                result.add(file.getAbsolutePath());
-            }
-        }
+        return duckDBService.executeQuery(query != null ? query : "SELECT * FROM " + viewName);
     }
 
     // Helper methods

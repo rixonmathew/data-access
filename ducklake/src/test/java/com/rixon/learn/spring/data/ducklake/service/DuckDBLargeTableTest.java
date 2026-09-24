@@ -31,17 +31,11 @@ class DuckDBLargeTableTest {
     void setUp() throws SQLException {
         // Create a large test table with 1000 rows and 100 columns
         duckDBService.createLargeTestTable(TEST_TABLE, NUM_ROWS, NUM_COLUMNS);
-        System.out.println("[DEBUG_LOG] Created large test table with " + NUM_ROWS + " rows and " + NUM_COLUMNS + " columns");
     }
 
     @AfterEach
-    void tearDown() {
-        try {
-            // Clean up test table if it exists
-            duckDBService.executeStatement("DROP TABLE IF EXISTS " + TEST_TABLE);
-        } catch (SQLException e) {
-            System.err.println("Error cleaning up test table: " + e.getMessage());
-        }
+    void tearDown() throws SQLException {
+        duckDBService.executeStatement("DROP TABLE IF EXISTS " + TEST_TABLE);
     }
 
     @Test
@@ -50,7 +44,6 @@ class DuckDBLargeTableTest {
         List<Map<String, Object>> countResult = duckDBService.executeQuery("SELECT COUNT(*) as count FROM " + TEST_TABLE);
         assertEquals(1, countResult.size());
         assertEquals(String.valueOf(NUM_ROWS), String.valueOf(countResult.get(0).get("count")));
-        System.out.println("[DEBUG_LOG] Count query returned " + countResult.get(0).get("count") + " rows");
     }
 
     @Test
@@ -65,8 +58,6 @@ class DuckDBLargeTableTest {
         assertEquals("1", String.valueOf(firstRow.get("id")));
         assertEquals("value_1_1", firstRow.get("attr1"));
         assertEquals("value_1_100", firstRow.get("attr100"));
-
-        System.out.println("[DEBUG_LOG] Select query returned " + selectResult.size() + " rows with " + firstRow.size() + " columns");
     }
 
     @Test
@@ -80,8 +71,6 @@ class DuckDBLargeTableTest {
         assertEquals("500", String.valueOf(row.get("id")));
         assertEquals("value_500_1", row.get("attr1"));
         assertEquals("value_500_100", row.get("attr100"));
-
-        System.out.println("[DEBUG_LOG] Filter query returned row with id " + row.get("id"));
     }
 
     @Test
@@ -95,8 +84,5 @@ class DuckDBLargeTableTest {
         assertEquals("1", String.valueOf(result.get("min_id")));
         assertEquals(String.valueOf(NUM_ROWS), String.valueOf(result.get("max_id")));
         assertEquals(String.valueOf(NUM_ROWS), String.valueOf(result.get("count")));
-
-        System.out.println("[DEBUG_LOG] Aggregate query returned min_id=" + result.get("min_id") + 
-                          ", max_id=" + result.get("max_id") + ", count=" + result.get("count"));
     }
 }

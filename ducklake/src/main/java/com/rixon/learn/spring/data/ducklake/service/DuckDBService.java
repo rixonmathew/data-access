@@ -1,394 +1,164 @@
 package com.rixon.learn.spring.data.ducklake.service;
 
-import com.rixon.learn.spring.data.ducklake.config.DuckDBConfig;
+import com.rixon.learn.spring.data.ducklake.config.DuckLakeProperties;
 import lombok.extern.slf4j.Slf4j;
+import org.duckdb.DuckDBConnection;
 import org.springframework.beans.factory.DisposableBean;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.regex.Pattern;
 
+/**
+ * Owns the single embedded in-memory DuckDB instance. Each call gets its own connection
+ * ({@link DuckDBConnection#duplicate()}) to the same instance, so attached catalogs and secrets
+ * are shared while statements from different threads stay independent.
+ */
 @Slf4j
 @Service
 public class DuckDBService implements DisposableBean {
 
-    private Connection connection;
-    private static final String DB_URL = "jdbc:duckdb:";
-    private final AtomicBoolean initialized = new AtomicBoolean(false);
+    private static final Pattern IDENTIFIER = Pattern.compile("[A-Za-z_][A-Za-z0-9_]*");
 
-    @Autowired
-    private DuckDBConfig duckDBConfig;
+    private final DuckDBConnection root;
 
-    public DuckDBService() {
-        try {
-            // Load the DuckDB JDBC driver
-            Class.forName("org.duckdb.DuckDBDriver");
-            // Connection will be initialized lazily
-        } catch (ClassNotFoundException e) {
-            log.error("Error loading DuckDB driver", e);
-            throw new RuntimeException("Failed to load DuckDB driver", e);
+    public DuckDBService(DuckLakeProperties properties) throws SQLException {
+        this.root = (DuckDBConnection) DriverManager.getConnection("jdbc:duckdb:");
+        try (Statement stmt = root.createStatement()) {
+            stmt.execute("INSTALL httpfs");
+            stmt.execute("LOAD httpfs");
+            DuckLakeProperties.S3 s3 = properties.getS3();
+            if (StringUtils.hasText(s3.getEndpoint())) {
+                stmt.execute("""
+                        CREATE OR REPLACE SECRET s3_storage (
+                            TYPE s3,
+                            KEY_ID %s,
+                            SECRET %s,
+                            REGION %s,
+                            ENDPOINT %s,
+                            URL_STYLE %s,
+                            USE_SSL %s)
+                        """.formatted(literal(s3.getAccessKeyId()), literal(s3.getSecretAccessKey()),
+                        literal(s3.getRegion()), literal(s3.getEndpoint()), literal(s3.getUrlStyle()), s3.isUseSsl()));
+                log.info("DuckDB S3 secret created for endpoint {}", s3.getEndpoint());
+            }
         }
     }
 
-    private synchronized void ensureInitialized() {
-        if (!initialized.get()) {
+    /** Opens a new connection to the shared DuckDB instance. The caller closes it. */
+    public Connection openConnection() throws SQLException {
+        return root.duplicate();
+    }
+
+    /**
+     * Runs {@code work} inside one transaction on one connection: commits if it returns,
+     * rolls back and rethrows if it throws.
+     */
+    public <T> T inTransaction(SqlFunction<Connection, T> work) throws SQLException {
+        try (Connection conn = openConnection()) {
+            conn.setAutoCommit(false);
             try {
-                initializeConnection();
-                initialized.set(true);
-            } catch (SQLException e) {
-                log.error("Error initializing DuckDB connection", e);
-                throw new RuntimeException("Failed to initialize DuckDB connection", e);
+                T result = work.apply(conn);
+                conn.commit();
+                return result;
+            } catch (SQLException | RuntimeException e) {
+                conn.rollback();
+                throw e;
             }
-        }
-    }
-
-    private void initializeConnection() throws SQLException {
-        // Create an in-memory DuckDB database
-        connection = DriverManager.getConnection(DB_URL);
-
-        // Install and load the DuckLake extension
-        try (Statement stmt = connection.createStatement()) {
-            // Install DuckLake extension
-            stmt.execute("INSTALL ducklake");
-            // Load DuckLake extension
-            stmt.execute("LOAD ducklake");
-            log.info("DuckLake extension installed and loaded successfully");
-
-            // Create and attach a catalog database based on configuration
-            if ("postgres".equalsIgnoreCase(duckDBConfig.getCatalogType()) && 
-                duckDBConfig.getCatalogJdbcUrl() != null) {
-                stmt.execute("INSTALL postgres;LOAD postgres;");
-                stmt.execute("""
-                    create secret if not exists postgres_secret(
-                           type postgres,
-                           host '%s',
-                           port %d,
-                           database '%s',
-                           user '%s',
-                           password '%s');
-                """.formatted(duckDBConfig.getHost(),duckDBConfig.getPort(),duckDBConfig.getDatabase()
-                ,duckDBConfig.getCatalogUsername(),duckDBConfig.getCatalogPassword()));
-
-                log.info("Creating and attaching PostgreSQL catalog database");
-                stmt.execute("""
-                ATTACH 'ducklake:postgres:dbname=%s host=%s port=%d user=%s password=%s' as pg_ducklake (data_path '%s');
-                """.formatted(duckDBConfig.getDatabase(),duckDBConfig.getHost(),duckDBConfig.getPort(),
-                        duckDBConfig.getCatalogUsername(),duckDBConfig.getCatalogPassword(),duckDBConfig.getCatalogDataFilesPath()
-                        ));
-                stmt.execute("use pg_ducklake;");
-                stmt.execute("create table sales_data(id integer, product varchar, sale decimal(10,2),sale_date date,region varchar)");
-                stmt.execute("ALTER TABLE sales_data SET PARTITIONED BY (year(sale_date), region);");
-                stmt.execute("insert into sales_data values(1,'apple',12.34,'2022-01-01','western')");
-                stmt.execute("insert into sales_data values(2,'banana',15.67,'2022-01-02','southern')");
-                stmt.execute("insert into sales_data values(3,'orange',10.98,'2022-01-03','eastern')");
-                ResultSet resultSet = stmt.executeQuery("select * from sales_data");
-                while (resultSet.next()) {
-                    log.info("{}", resultSet.getString(2));
-                }
-                log.info("PostgreSQL catalog database configured successfully");
-                log.info("PostgreSQL catalog database attached successfully");
-            } else {
-                log.info("Using default in-memory catalog database");
-            }
-        } catch (SQLException e) {
-            log.warn("Error installing or loading DuckLake extension: {}. Will continue without it.", e.getMessage());
-            // Continue without the extension for testing purposes
         }
     }
 
     /**
-     * Creates a table from a local CSV file
-     * 
-     * @param tableName The name of the table to create
-     * @param csvPath The path to the CSV file
-     * @throws SQLException If there's an error creating the table
+     * Creates (or replaces) a table from a local file or an {@code s3://} object.
+     *
+     * @param format CSV or PARQUET
      */
+    public void createTableFromFile(String tableName, String path, String format) throws SQLException {
+        String readFunction = switch (format.toUpperCase()) {
+            case "CSV" -> "read_csv_auto";
+            case "PARQUET" -> "read_parquet";
+            default -> throw new IllegalArgumentException("Unsupported format: " + format);
+        };
+        executeStatement("CREATE OR REPLACE TABLE %s AS SELECT * FROM %s(%s)"
+                .formatted(identifier(tableName), readFunction, literal(path)));
+        log.info("Table {} created from {} ({})", tableName, path, format);
+    }
+
     public void createTableFromCSV(String tableName, String csvPath) throws SQLException {
-        ensureInitialized();
-        try (Statement stmt = connection.createStatement()) {
-            String createTableSql = String.format(
-                "CREATE OR REPLACE TABLE %s AS SELECT * FROM read_csv_auto('%s')",
-                tableName, csvPath
-            );
-            stmt.execute(createTableSql);
-            log.info("Table {} created successfully from CSV file: {}", tableName, csvPath);
-        }
+        createTableFromFile(tableName, csvPath, "CSV");
     }
 
-    /**
-     * Creates a table from S3 data using DuckLake or AWS S3 extension
-     * 
-     * @param tableName The name of the table to create
-     * @param s3Path The S3 path to the data (e.g., s3://bucket/path)
-     * @param format The format of the data (e.g., CSV, Parquet)
-     * @throws SQLException If there's an error creating the table
-     */
-    public void createTableFromS3(String tableName, String s3Path, String format) throws SQLException {
-        ensureInitialized();
-
-        // Install and load AWS S3 extension if not already loaded
-        try {
-            try (Statement stmt = connection.createStatement()) {
-                stmt.execute("INSTALL httpfs");
-                stmt.execute("LOAD httpfs");
-            }
-            log.info("AWS S3 extension installed and loaded successfully");
-        } catch (SQLException e) {
-            log.warn("AWS S3 extension already installed or error loading: {}", e.getMessage());
-            // Continue anyway
+    /** Creates a table with an INTEGER id and {@code columns} VARCHAR attributes, generated in SQL. */
+    public void createLargeTestTable(String tableName, int rows, int columns) throws SQLException {
+        StringBuilder select = new StringBuilder("SELECT i::INTEGER AS id");
+        for (int j = 1; j <= columns; j++) {
+            select.append(", 'value_' || i || '_").append(j).append("' AS attr").append(j);
         }
-
-        // Create the table using the appropriate read function based on format
-        String readFunction;
-        if ("CSV".equalsIgnoreCase(format)) {
-            readFunction = "read_csv_auto";
-        } else if ("PARQUET".equalsIgnoreCase(format)) {
-            readFunction = "read_parquet";
-        } else {
-            // Default to auto-detection
-            readFunction = "read_csv_auto";
-        }
-
-        // Try using AWS S3 extension
-        String createTableSql = String.format(
-            "CREATE OR REPLACE TABLE %s AS SELECT * FROM %s('%s')",
-            tableName, readFunction, s3Path
-        );
-
-        try {
-            try (Statement stmt = connection.createStatement()) {
-                stmt.execute(createTableSql);
-            }
-            log.info("Table {} created successfully from S3 path: {} using AWS S3 extension", tableName, s3Path);
-            return;
-        } catch (SQLException e) {
-            log.warn("Failed to create table using AWS S3 extension: {}", e.getMessage());
-            // Fall through to try DuckLake
-        }
-
-        // Try using DuckLake with the new function name
-        try {
-            String duckLakeCreateTableSql = String.format(
-                "CREATE OR REPLACE TABLE %s AS SELECT * FROM ducklake_snapshots('%s')",
-                tableName, s3Path
-            );
-            try (Statement stmt = connection.createStatement()) {
-                stmt.execute(duckLakeCreateTableSql);
-            }
-            log.info("Table {} created successfully from S3 path: {} using DuckLake extension", tableName, s3Path);
-            return;
-        } catch (SQLException e) {
-            log.warn("Failed to create table using DuckLake extension: {}", e.getMessage());
-            // Fall through to try local file
-        }
-
-        // If we're in a test environment, try to use a local file as a last resort
-        if (s3Path.contains("test") && format.equalsIgnoreCase("CSV")) {
-            // Extract the file name from the S3 path
-            String fileName = s3Path.substring(s3Path.lastIndexOf('/') + 1);
-
-            try {
-                // Try to find the file in the temp directory and its subdirectories
-                String tempDir = System.getProperty("java.io.tmpdir");
-                log.info("Searching for {} in temp directory: {}", fileName, tempDir);
-
-                // First try the exact path that might be in the logs
-                String localPath = null;
-
-                // Try to find the file in the junit temporary directories
-                java.nio.file.Path tempPath = java.nio.file.Paths.get(tempDir);
-                try (java.util.stream.Stream<java.nio.file.Path> paths = java.nio.file.Files.find(
-                        tempPath, 
-                        3, // max depth
-                        (path, attrs) -> path.getFileName().toString().equals(fileName) && attrs.isRegularFile())) {
-
-                    localPath = paths.findFirst().map(java.nio.file.Path::toString).orElse(null);
-                } catch (Exception e) {
-                    log.warn("Error searching for file: {}", e.getMessage());
-                }
-
-                if (localPath == null) {
-                    // If we couldn't find the file, try a direct path as a last resort
-                    localPath = tempDir + "/" + fileName;
-                }
-
-                log.info("Using local file path: {}", localPath);
-
-                String localCreateTableSql = String.format(
-                    "CREATE OR REPLACE TABLE %s AS SELECT * FROM read_csv_auto('%s')",
-                    tableName, localPath
-                );
-                try (Statement stmt = connection.createStatement()) {
-                    stmt.execute(localCreateTableSql);
-                }
-                log.info("Table {} created successfully from local file: {}", tableName, localPath);
-                return;
-            } catch (SQLException ex) {
-                log.error("Failed to create table from local file: {}", ex.getMessage());
-                throw ex;
-            } catch (Exception ex) {
-                log.error("Unexpected error creating table from local file: {}", ex.getMessage());
-                throw new SQLException("Failed to create table from local file", ex);
-            }
-        } else {
-            throw new SQLException("Failed to create table from S3 path: " + s3Path);
-        }
+        select.append(" FROM range(1, ").append(rows + 1).append(") t(i)");
+        executeStatement("CREATE OR REPLACE TABLE " + identifier(tableName) + " AS " + select);
+        log.info("Large test table {} created with {} rows and {} columns", tableName, rows, columns);
     }
 
-    /**
-     * Executes a SQL statement that doesn't return a result set
-     * 
-     * @param sql The SQL statement to execute
-     * @throws SQLException If there's an error executing the statement
-     */
     public void executeStatement(String sql) throws SQLException {
-        ensureInitialized();
-        try (Statement stmt = connection.createStatement()) {
+        try (Connection conn = openConnection();
+             Statement stmt = conn.createStatement()) {
             stmt.execute(sql);
         }
     }
 
-    /**
-     * Executes a query and returns the results as a list of maps
-     * 
-     * @param query The SQL query to execute
-     * @return A list of maps, where each map represents a row with column names as keys
-     * @throws SQLException If there's an error executing the query
-     */
+    /** Executes a query and returns each row as a column-name to value map, in column order. */
     public List<Map<String, Object>> executeQuery(String query) throws SQLException {
-        ensureInitialized();
-        List<Map<String, Object>> results = new ArrayList<>();
-
-        try (Statement stmt = connection.createStatement();
+        try (Connection conn = openConnection();
+             Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(query)) {
-
-            int columnCount = rs.getMetaData().getColumnCount();
-
-            while (rs.next()) {
-                Map<String, Object> row = new HashMap<>();
-                for (int i = 1; i <= columnCount; i++) {
-                    String columnName = rs.getMetaData().getColumnName(i);
-                    Object value = rs.getObject(i);
-                    row.put(columnName, value);
-                }
-                results.add(row);
-            }
-        }
-
-        return results;
-    }
-
-    /**
-     * Closes the DuckDB connection
-     */
-    public void close() {
-        if (initialized.get() && connection != null) {
-            try {
-                connection.close();
-                initialized.set(false);
-                log.info("DuckDB connection closed");
-            } catch (SQLException e) {
-                log.error("Error closing DuckDB connection", e);
-            }
+            return toRows(rs);
         }
     }
 
-    /**
-     * Creates a large test table with the specified number of rows and columns
-     * 
-     * @param tableName The name of the table to create
-     * @param rows The number of rows to generate
-     * @param columns The number of columns to generate
-     * @throws SQLException If there's an error creating the table
-     */
-    public void createLargeTestTable(String tableName, int rows, int columns) throws SQLException {
-        ensureInitialized();
-
-        log.info("Creating large test table {} with {} rows and {} columns", tableName, rows, columns);
-
-        try (Statement stmt = connection.createStatement()) {
-            // First, create the table with the specified number of columns
-            StringBuilder createTableSql = new StringBuilder();
-            createTableSql.append("CREATE OR REPLACE TABLE ").append(tableName).append(" (");
-            createTableSql.append("id INTEGER");
-
-            for (int i = 1; i <= columns; i++) {
-                createTableSql.append(", attr").append(i).append(" VARCHAR");
+    static List<Map<String, Object>> toRows(ResultSet rs) throws SQLException {
+        ResultSetMetaData meta = rs.getMetaData();
+        List<Map<String, Object>> rows = new ArrayList<>();
+        while (rs.next()) {
+            Map<String, Object> row = new LinkedHashMap<>();
+            for (int i = 1; i <= meta.getColumnCount(); i++) {
+                row.put(meta.getColumnLabel(i), rs.getObject(i));
             }
-
-            createTableSql.append(")");
-
-            stmt.execute(createTableSql.toString());
-            log.info("Table structure created successfully");
-
-            // Now insert the data in batches
-            int batchSize = 100;
-            for (int batch = 0; batch < rows / batchSize; batch++) {
-                StringBuilder insertSql = new StringBuilder();
-                insertSql.append("INSERT INTO ").append(tableName).append(" VALUES ");
-
-                for (int i = 0; i < batchSize; i++) {
-                    int rowId = batch * batchSize + i + 1;
-
-                    if (i > 0) {
-                        insertSql.append(", ");
-                    }
-
-                    insertSql.append("(").append(rowId);
-
-                    for (int j = 1; j <= columns; j++) {
-                        insertSql.append(", 'value_").append(rowId).append("_").append(j).append("'");
-                    }
-
-                    insertSql.append(")");
-                }
-
-                stmt.execute(insertSql.toString());
-                log.info("Inserted batch {} of {} rows", batch + 1, batchSize);
-            }
-
-            // Insert any remaining rows
-            int remainingRows = rows % batchSize;
-            if (remainingRows > 0) {
-                StringBuilder insertSql = new StringBuilder();
-                insertSql.append("INSERT INTO ").append(tableName).append(" VALUES ");
-
-                for (int i = 0; i < remainingRows; i++) {
-                    int rowId = (rows / batchSize) * batchSize + i + 1;
-
-                    if (i > 0) {
-                        insertSql.append(", ");
-                    }
-
-                    insertSql.append("(").append(rowId);
-
-                    for (int j = 1; j <= columns; j++) {
-                        insertSql.append(", 'value_").append(rowId).append("_").append(j).append("'");
-                    }
-
-                    insertSql.append(")");
-                }
-
-                stmt.execute(insertSql.toString());
-                log.info("Inserted remaining {} rows", remainingRows);
-            }
-
-            log.info("Large test table {} created successfully with {} rows and {} columns", tableName, rows, columns);
+            rows.add(row);
         }
+        return rows;
+    }
+
+    /** Validates a bare SQL identifier (table, column or catalog name) so it can be spliced into SQL. */
+    public static String identifier(String name) {
+        if (name == null || !IDENTIFIER.matcher(name).matches()) {
+            throw new IllegalArgumentException("Invalid identifier: " + name);
+        }
+        return name;
+    }
+
+    /** Quotes a value as a SQL string literal. */
+    public static String literal(String value) {
+        return "'" + (value == null ? "" : value.replace("'", "''")) + "'";
     }
 
     @Override
-    public void destroy() throws Exception {
-        log.info("Destroying DuckDBService bean, closing connection");
-        close();
+    public void destroy() throws SQLException {
+        root.close();
+        log.info("DuckDB connection closed");
+    }
+
+    @FunctionalInterface
+    public interface SqlFunction<T, R> {
+        R apply(T t) throws SQLException;
     }
 }
