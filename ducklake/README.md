@@ -5,9 +5,9 @@
 [![DuckDB](https://img.shields.io/badge/DuckDB-1.5.5.1-yellow.svg)](https://duckdb.org/)
 [![Testcontainers](https://img.shields.io/badge/Testcontainers-2.0.5-blue.svg)](https://testcontainers.com/)
 
-Reference implementation of **[DuckLake](https://ducklake.select/)**, the open table format from the DuckDB team. DuckLake keeps table data as plain Parquet files and puts all table metadata (snapshots, schemas, file lists, partition info) in an ordinary SQL database. Here that database is **PostgreSQL**. The DuckDB engine is embedded in a **Spring Boot 4.1.1** app on **Java 25**.
+Reference implementation of **[DuckLake](https://ducklake.select/)**, the open table format from the DuckDB team. DuckLake keeps table data as plain Parquet files and puts all table metadata (snapshots, schemas, file lists, partition info, column statistics) in an ordinary SQL database. Here that database is **PostgreSQL** and the Parquet files live on **S3** (LocalStack). The DuckDB engine is embedded in a **Spring Boot 4.1.1** app on **Java 25**.
 
-Iceberg and Delta Lake (see [`apache-iceberg`](../apache-iceberg/README.md) and [`delta-lake`](../delta-lake/README.md)) keep their metadata as JSON/Avro files in object storage. DuckLake replaces that metadata tree with SQL tables, so commits are ordinary database transactions.
+Iceberg and Delta Lake (see [`apache-iceberg`](../apache-iceberg/README.md) and [`delta-lake`](../delta-lake/README.md)) keep their metadata as JSON/Avro files next to the data in object storage. DuckLake replaces that metadata tree with SQL tables, so a commit is a single database transaction and there are no manifest files to list or merge.
 
 > Originally developed as the standalone `ducklake_poc` repository. It was imported here with its full commit history (`git subtree`).
 
@@ -18,94 +18,123 @@ Iceberg and Delta Lake (see [`apache-iceberg`](../apache-iceberg/README.md) and 
 ```mermaid
 flowchart LR
     subgraph App["Spring Boot Application"]
-        Ctrl["DuckDBController\n/api/duckdb"]
-        Svc["DuckDBService\n(embedded DuckDB JDBC)"]
-        PPS["PartitionedParquetService\n(Avro -> Parquet writer)"]
-        Ctrl --> Svc
-        PPS --> Svc
+        LakeCtrl["DuckLakeController\n/api/ducklake"]
+        DbCtrl["DuckDBController\n/api/duckdb"]
+        Lake["DuckLakeService\n(lifecycle: commits, time travel,\nevolution, maintenance)"]
+        Db["DuckDBService\n(embedded DuckDB, S3 secret,\nper-call connections)"]
+        PPS["PartitionedParquetService\n(Avro -> Hive-partitioned Parquet)"]
+        LakeCtrl --> Lake
+        DbCtrl --> Db
+        Lake --> Db
+        PPS --> Db
     end
 
-    subgraph Catalog["PostgreSQL 17 (Testcontainer)"]
-        Meta["DuckLake metadata tables\nducklake_table, ducklake_snapshot,\nducklake_data_file, ..."]
+    subgraph Catalog["PostgreSQL 17"]
+        Meta["ducklake_snapshot, ducklake_table,\nducklake_data_file, ducklake_column, ...\n+ inlined rows"]
     end
 
-    subgraph Storage["Data files"]
-        Local["Local data_path\n(Hive-partitioned Parquet)"]
-        S3["LocalStack S3 3.4.0\n(Parquet via httpfs)"]
+    subgraph S3["LocalStack S3 3.4.0"]
+        LakeData["s3://ducklake-it/lake/\nmain/trades/ticker=AAPL/*.parquet"]
+        Raw["s3://ducklake-it-data/\nCSV + Hive-partitioned Parquet"]
     end
 
-    Svc -->|"ATTACH 'ducklake:postgres:...'"| Meta
-    Svc -->|writes / reads Parquet| Local
-    Svc -->|"httpfs s3://"| S3
-    PPS -->|upload via AWS SDK v2| S3
+    Db -->|"ATTACH 'ducklake:postgres:...' AS lake"| Meta
+    Db -->|"DuckLake data files (httpfs)"| LakeData
+    Db -->|"read_csv / read_parquet (httpfs)"| Raw
+    PPS -->|"upload (AWS SDK v2)"| Raw
 ```
+
+`DuckDBService` owns one in-memory DuckDB instance. On startup it creates the S3 secret, and `DuckLakeService` attaches the catalog as `lake` (`ATTACH IF NOT EXISTS`, safe on every restart). Each call gets its own connection via `DuckDBConnection.duplicate()`, so the attached catalog and secrets are shared, while a transaction stays on one connection. Startup fails if the catalog cannot be attached; nothing is silently skipped.
 
 ---
 
 ## ⚡ Key Scenarios Tested & Validated
 
-All scenarios run against live **PostgreSQL** (`postgres:17`) and **LocalStack** (`localstack/localstack:3.4.0`) containers.
+All tests run against live **PostgreSQL** (`postgres:17`) and **LocalStack** (`localstack/localstack:3.4.0`) containers. The DuckLake data path is `s3://ducklake-it/lake/` and inlining is off (`DATA_INLINING_ROW_LIMIT 0`), so every commit writes real Parquet objects to S3.
 
-### 1. DuckLake catalog on PostgreSQL (`DucklakePostgresTest`)
-On startup `DuckDBService` installs the `ducklake` and `postgres` extensions, creates a DuckDB `POSTGRES` secret, and attaches the catalog:
+### 1. Full table lifecycle (`DuckLakeLifecycleIntegrationTest`)
 
-```sql
-ATTACH 'ducklake:postgres:dbname=... host=... port=... user=... password=...'
-    AS pg_ducklake (DATA_PATH 'data_files/');
-USE pg_ducklake;
-CREATE TABLE sales_data (id INTEGER, product VARCHAR, sale DECIMAL(10,2), sale_date DATE, region VARCHAR);
-ALTER TABLE sales_data SET PARTITIONED BY (year(sale_date), region);
-```
+One ordered test on a `trades` table partitioned by `ticker`:
 
-The test checks that:
-* the rows can be queried back through DuckDB.
-* after `CALL ducklake_flush_inlined_data('pg_ducklake')`, there is **one Parquet file per partition** (3 regions give 3 files, via `ducklake_list_files`). DuckLake inlines small inserts into the catalog database until they are flushed.
-* the table metadata is stored **in PostgreSQL**: `ducklake_table` has the `sales_data` row when queried directly over JDBC.
+| Step | DuckLake feature | What is asserted |
+| :--- | :--- | :--- |
+| 1 | `CREATE TABLE` + `SET PARTITIONED BY (ticker)` in one transaction | Created once; a second call is a no-op |
+| 2 | ACID commit | 3 rows in one commit = **one snapshot**, **one Parquet object per partition** in S3 (`ticker=AAPL/`, `NVDA`, `MSFT`) |
+| 3 | Small commits | Each commit adds one snapshot and one AAPL file (3 AAPL files, compacted later) |
+| 4 | Multi-statement transaction | An `UPDATE` and an `INSERT` land in the same snapshot; the change feed (`table_changes`) shows `update_preimage` 125.00, `update_postimage` 126.50 and `insert` |
+| 5 | Rollback | A batch that fails on a `NOT NULL` column, and a correction for an unknown trade, both roll back fully: **no new snapshot, no rows** |
+| 6 | Time travel | `AT (VERSION => n)` returns the 3 original rows and the pre-correction price; `AT (TIMESTAMP => ...)` resolves the same snapshot from its `snapshot_time` |
+| 7 | Schema evolution | `ADD COLUMN venue` bumps `schema_version` without rewriting files; old rows read `NULL`, and `DESCRIBE ... AT (VERSION => n)` still shows the old 5 columns |
+| 8 | Partition evolution | `SET PARTITIONED BY (year(trade_date), month(trade_date))`: the new file goes to `year=2026/month=2/`, every existing `ticker=` file is kept as is |
+| 9 | Compaction | `ducklake_merge_adjacent_files` merges the 3 AAPL files into 1; row count unchanged; time travel to the first snapshot still works |
+| 10 | Expiry + cleanup | `ducklake_expire_snapshots` removes old snapshots, `ducklake_cleanup_old_files` deletes the 3 replaced AAPL objects **from S3**; time travel to an expired version fails with `No snapshot found` |
+| 11 | Catalog in PostgreSQL | Queried directly over JDBC: `ducklake_snapshot` row count equals `lake.snapshots()`, `ducklake_table` has the table, and `ducklake_data_file` has exactly the live files |
 
-### 2. Hive-partitioned Parquet on local disk and S3 (`PartitionedParquetServiceTest`)
-* Generates Avro `GenericRecord`s and writes Snappy-compressed Parquet files per partition (`category=.../department=.../`). The writer uses Parquet's `LocalOutputFile` rather than the Hadoop `FileSystem` API, which fails on Java 24+ because `Subject.getSubject()` is no longer supported.
-* Uploads the partition tree to LocalStack S3 and queries it through a view over `parquet_scan('<root>/**/*.parquet', hive_partitioning=1)`.
-* Checks **partition pruning**: grouping gives 15 `category`/`department` partitions (5 × 3), and filtering on `category = 'category_1'` returns only its 3 partitions.
+A second test covers **data inlining**. With `set_option('data_inlining_row_limit', 100)` on the table, a 2-row insert can be read straight away, but no Parquet file exists and nothing is in S3: the rows are stored in PostgreSQL. `ducklake_flush_inlined_data` then writes them to one Parquet object.
 
-### 3. Querying S3 and CSV data (`DuckDBServiceIntegrationTest`)
-* Configures DuckDB `httpfs` against the LocalStack endpoint (`s3_endpoint`, `s3_url_style='path'`) and creates tables from S3 objects and from local CSV files.
-
-### 4. Wide-table analytics (`DuckDBLargeTableTest`)
-* Builds a table of 1,000 rows by 100 attribute columns and runs `COUNT`, projection, point-filter, and `MIN`/`MAX`/`COUNT` aggregate queries.
-
-### 5. REST API (`DuckDBControllerIntegrationTest`)
-MockMvc tests for the endpoints:
+### 2. REST API over DuckLake (`DuckLakeControllerIntegrationTest`)
 
 | Method | Path | Purpose |
 | :--- | :--- | :--- |
-| `POST` | `/api/duckdb/tables?tableName=&s3Path=&format=` | Create a table from an S3 object (CSV or Parquet) |
-| `POST` | `/api/duckdb/query` | Run an ad-hoc SQL query |
-| `GET` | `/api/duckdb/tables/{tableName}` | Read the rows of a table |
+| `POST` | `/api/ducklake/tables/{table}/trades` | Append trades (JSON array) in one snapshot; creates the table, partitioned by ticker, on first use |
+| `GET` | `/api/ducklake/tables/{table}/trades?version=` | Current trades, or time travel to a snapshot |
+| `GET` | `/api/ducklake/tables/{table}/files` | Live data files |
+| `GET` | `/api/ducklake/snapshots` | Catalog snapshots with their change summaries |
+
+Invalid table names and constraint violations return `400`.
+
+### 3. Hive-partitioned Parquet on local disk and S3 (`PartitionedParquetServiceTest`)
+* Generates Avro `GenericRecord`s and writes Snappy-compressed Parquet per partition (`category=.../department=.../`). The writer uses Parquet's `LocalOutputFile` rather than the Hadoop `FileSystem` API, which fails on Java 24+ because `Subject.getSubject()` is no longer supported.
+* Uploads the partition tree to S3 and queries it through `read_parquet('<root>/**/*.parquet', hive_partitioning = true)` from both disk and S3.
+* Checks **partition pruning** in the query plan: filtering on `category = 'category_1'` reads `3/15` files.
+
+### 4. Querying S3 and CSV data (`DuckDBServiceIntegrationTest`, `DuckDBControllerIntegrationTest`)
+* `httpfs` reads CSV from LocalStack using the S3 secret built from `ducklake.s3.*`. No per-session `SET s3_*` calls are needed.
+* A missing S3 object is an error, not a silent fallback. A failed `inTransaction` block rolls back.
+* `/api/duckdb` endpoints: create a table from a local or `s3://` file, run ad-hoc SQL, read a table. Table names are validated as identifiers.
+
+### 5. Wide-table analytics (`DuckDBLargeTableTest`)
+* Generates a 1,000 row by 100 column table with `range()` and runs `COUNT`, projection, point-filter and `MIN`/`MAX` queries.
 
 ---
 
 ## 🛠️ Configuration
 
-`DuckDBConfig` binds properties with the `duckdb.` prefix. The default `catalog-type` is `memory`, which uses a plain in-memory DuckDB with no DuckLake catalog. The tests switch it to `postgres` and fill in the connection details from the container. For a real deployment, supply credentials from the environment, never from committed files:
+`DuckLakeProperties` binds the `ducklake.*` properties. By default (`application.yml`) the app needs **no infrastructure**: the catalog is a local DuckDB file (`data_files/catalog.ducklake`), data files go to `data_files/lake/`, and small inserts are inlined into the catalog until flushed. Environment variables switch to PostgreSQL and S3:
 
-```properties
-duckdb.catalog-type=postgres
-duckdb.host=${DUCKLAKE_PG_HOST}
-duckdb.port=${DUCKLAKE_PG_PORT:5432}
-duckdb.database=${DUCKLAKE_PG_DB}
-duckdb.catalog-username=${DUCKLAKE_PG_USER}
-duckdb.catalog-password=${DUCKLAKE_PG_PASSWORD}
-duckdb.catalog-data-files-path=data_files/
-```
+| Variable | Property | Default |
+| :--- | :--- | :--- |
+| `DUCKLAKE_CATALOG_TYPE` | `ducklake.catalog.type` | `duckdb` (or `postgres`) |
+| `DUCKLAKE_PG_HOST` / `_PORT` / `_DB` | `ducklake.catalog.host` / `port` / `database` | `localhost` / `5432` / `ducklake_catalog` |
+| `DUCKLAKE_PG_USER` / `_PASSWORD` | `ducklake.catalog.username` / `password` | — |
+| `DUCKLAKE_DATA_PATH` | `ducklake.data-path` | `data_files/lake/` (or `s3://bucket/prefix/`) |
+| `DUCKLAKE_S3_ENDPOINT` | `ducklake.s3.endpoint` | empty = no S3 secret (e.g. `localhost:4566`) |
+| `DUCKLAKE_S3_REGION` / `_ACCESS_KEY_ID` / `_SECRET_ACCESS_KEY` | `ducklake.s3.*` | `us-east-1` / — / — |
 
-Generated Parquet output (`data_files/`) is git-ignored.
+`ducklake.data-inlining-row-limit` sets the catalog-wide inlining threshold (0 disables it). The PostgreSQL password is passed through a DuckDB `postgres` secret, not embedded in the `ATTACH` string.
+
+Generated output (`data_files/`) is git-ignored.
 
 ---
 
-## 🧪 Running the Tests
+## 🧪 Running
 
-Docker must be running. The DuckDB extensions (`ducklake`, `postgres`, `httpfs`) download on first use, so the first run needs network access.
+Tests (Docker must be running; the `ducklake`, `postgres` and `httpfs` DuckDB extensions download on first use, so the first run needs network access):
 
 ```bash
 mvn verify -pl ducklake -am
 ```
+
+The app, with the local catalog:
+
+```bash
+mvn -pl ducklake -am package -DskipTests
+java -jar ducklake/target/ducklake-0.0.1-SNAPSHOT.jar
+
+curl -X POST localhost:8080/api/ducklake/tables/trades/trades -H 'Content-Type: application/json' \
+  -d '[{"tradeId":"T-1","ticker":"AAPL","price":220.50,"quantity":100,"tradeDate":"2026-01-05"}]'
+curl localhost:8080/api/ducklake/snapshots
+curl 'localhost:8080/api/ducklake/tables/trades/trades?version=2'
+```
+
+`TestDucklakeApplication` (in `src/test`) starts the app against the same PostgreSQL + LocalStack containers the tests use.
