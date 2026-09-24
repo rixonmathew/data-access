@@ -59,13 +59,14 @@ flowchart TD
         DK["duckdb\n(DuckDB + S3 Parquet)"]
         DL["delta-lake\n(Delta Lake ACID Lakehouse)"]
         ICE["apache-iceberg\n(Apache Iceberg Open Lakehouse)"]
+        DKL["ducklake\n(DuckLake + PostgreSQL Catalog)"]
         TRINO["trino-federation\n(Trino Distributed SQL)"]
         TS["trinospark\n(Distributed Queries)"]
     end
 
     Accounts --> PG & CR
     Orders --> MG & DDB & CS & CDC & TRINO
-    Quotes --> RD & RCS & CH & DK & DL & ICE
+    Quotes --> RD & RCS & CH & DK & DL & ICE & DKL
     Exposure --> NJ
     Research --> QD & PG
     Orders --> ORA & H2 & SQLITE
@@ -91,6 +92,7 @@ flowchart TD
 | [**`duckdb`**](duckdb/README.md) | Embedded OLAP | `localstack:3.4.0` (S3) | DuckDB embedded vectorized engine executing analytical queries directly against remote Parquet files stored in S3, out-of-core streaming, Parquet vs DuckDB format performance benchmarks. | ✅ **100% Green** |
 | [**`delta-lake`**](delta-lake/README.md) | Lakehouse Storage | `localstack:3.4.0` (S3) | Delta Lake ACID transactions, commit log (`_delta_log`), Time Travel (`VERSION AS OF 0` vs `1`), Schema Evolution (`ADD_COLUMNS`), DuckDB Parquet querying, LocalStack S3 sync. | ✅ **100% Green** |
 | [**`apache-iceberg`**](apache-iceberg/README.md) | Open Lakehouse | `localstack:3.4.0` (S3) | Apache Iceberg ACID transactions, metadata tree (`metadata.json`, manifest lists, manifests), Hidden Partitioning, in-place zero-copy Partition Evolution, Schema Evolution with field ID tracking, Time Travel snapshots, Snapshot Rollback, DuckDB analytics, LocalStack S3 replication. | ✅ **100% Green** |
+| [**`ducklake`**](ducklake/README.md) | SQL-Catalog Lakehouse | `postgres:17` & `localstack:3.4.0` (S3) | DuckLake open table format on embedded DuckDB 1.5: PostgreSQL metadata catalog with Parquet data files on S3, one snapshot per ACID commit, multi-statement transactions and rollback, Time Travel (`AT (VERSION => n)` / `AT (TIMESTAMP => ...)`), change feed (`table_changes`), Schema Evolution (`ADD COLUMN`), Partition Evolution (`ticker` → `year/month`), data inlining and flush, compaction, snapshot expiry and S3 file cleanup, Hive-partitioned Parquet pruning, REST API. | ✅ **100% Green** |
 | [**`aws-s3`**](aws-s3/README.md) | Object Storage | `localstack:3.4.0` (S3) | Automated S3 bucket provisioning, high-throughput CSV batch streaming of instrument market data, metadata verification via `HeadObject`. | ✅ **100% Green** |
 | [**`oracle26ai`**](oracle26ai/README.md) | Enterprise SQL (R2DBC) | Oracle Cloud R2DBC | Non-blocking reactive streaming of financial instruments, Spring Data R2DBC repository queries, transient entity mapping compatibility. | ✅ **100% Green** |
 | [**`sqlite3`**](sqlite3/README.md) | Embedded Relational | In-Memory / File | High-speed local embedded relational queries, transaction boundaries, and mock data verification. | ✅ **100% Green** |

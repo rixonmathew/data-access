@@ -55,6 +55,7 @@
 		<module>apache-iceberg</module>
 		<module>cdc-outbox</module>
 		<module>trino-federation</module>
+		<module>ducklake</module>
 	</modules>
 
     <dependencyManagement>
