@@ -3,6 +3,7 @@ package com.rixon.learn.spring.data.arrow;
 import com.rixon.learn.spring.data.arrow.flightsql.DuckDbFlightSqlProducer;
 import com.rixon.learn.spring.data.arrow.service.DuckDbArrowService;
 import org.apache.arrow.flight.FlightServer;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -41,6 +42,15 @@ class FlightSqlJdbcIntegrationTest {
 
     @Autowired
     private DuckDbArrowService duckDB;
+
+    @AfterEach
+    void serverMemoryReleased() throws InterruptedException {
+        // gRPC frees the last server-side message buffers just after a call completes
+        for (int i = 0; i < 50 && producer.allocator().getAllocatedMemory() != 0; i++) {
+            Thread.sleep(100);
+        }
+        assertThat(producer.allocator().getAllocatedMemory()).as("Flight SQL server Arrow memory").isZero();
+    }
 
     private String url(String password) {
         return "jdbc:arrow-flight-sql://localhost:%d/?useEncryption=false&user=arrow&password=%s"

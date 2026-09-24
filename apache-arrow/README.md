@@ -41,7 +41,7 @@ At startup `DuckDbArrowService` creates a deterministic `trades` table in DuckDB
 
 ## ⚡ Key Scenarios Tested & Validated
 
-Tests that allocate Arrow memory do it in a child allocator and check it's back to zero afterwards. For uploaded Flight datasets, the server's allocator is checked too.
+Tests that allocate Arrow memory do it in a child allocator and check it's back to zero afterwards. The Flight SQL server's allocator is checked after every test, and the Flight server's after a dataset is dropped.
 
 ### 1. Columnar format (`ArrowColumnarIntegrationTest`)
 * **Allocator:** buffers come from `UnsafeAllocationManager` (see [Java 25 notes](#-java-25-notes)).
