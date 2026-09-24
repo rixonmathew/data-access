@@ -42,6 +42,7 @@ flowchart TD
     subgraph DocumentGraphVector["Document, Graph & Vector"]
         MG["mongodb\n(MongoDB 7.0)"]
         NJ["neo4j\n(Neo4j 5.13 Graph)"]
+        AGE["apache-age\n(openCypher in PostgreSQL)"]
         QD["qdrant\n(Qdrant v1.13 Vector DB)"]
     end
 
@@ -68,7 +69,7 @@ flowchart TD
     Accounts --> PG & CR
     Orders --> MG & DDB & CS & CDC & TRINO
     Quotes --> RD & RCS & CH & DK & DL & ICE & DKL & ARW
-    Exposure --> NJ
+    Exposure --> NJ & AGE
     Research --> QD & PG
     Orders --> ORA & H2 & SQLITE
 ```
@@ -82,6 +83,7 @@ flowchart TD
 | [**`cdc-outbox`**](cdc-outbox/README.md) | Event Streaming & CDC | `pgvector/pgvector:pg17` & `redpanda:v24.1.1` | Transactional Outbox pattern, atomic R2DBC order + outbox transaction, non-blocking outbox relay with `FOR UPDATE SKIP LOCKED`, Redpanda/Kafka event broker, idempotent consumer deduplication log, and streaming OLAP aggregations. | ✅ **100% Green** |
 | [**`cockroachdb`**](cockroachdb/README.md) | Distributed SQL | `cockroach:v23.2.0` | Heavy serialization contention triggering SQLState `40001` (`WriteTooOldError`), automated `@Retryable` backoff recovery, Follower Reads (`AS OF SYSTEM TIME`). | ✅ **100% Green** |
 | [**`neo4j`**](neo4j/README.md) | Graph Database | `neo4j:5.13.0` | Directed credit counterparty risk network, cyclic contagion ring detection (`(a)->(b)->(c)->(a)`), shortest contagion path, downstream blast radius traversal. | ✅ **100% Green** |
+| [**`apache-age`**](apache-age/README.md) | Graph in PostgreSQL | `apache/age:release_PG18_1.8.0` | Apache AGE 1.8 on PostgreSQL 18: the neo4j module's counterparty-risk scenarios in openCypher with identical answers (contagion rings, shortest path without `shortestPath()`, blast radius), MERGE upserts, SET/REMOVE, DETACH DELETE, `reduce()` over paths, agtype parameters and parser, Cypher results joined with relational tables in one SQL statement, graph + relational writes in one transaction, GIN vs btree index plans, CSV bulk load, documented differences from Neo4j. | ✅ **100% Green** |
 | [**`redis`**](redis/README.md) | In-Memory Store | `redis:7.2-alpine` | Distributed lock (`SETNX` + atomic Lua script release), sub-millisecond sliding-window rate limiter via ZSet, cache-aside with TTL eviction, Redis Streams (`XADD`/`XREVRANGE`). | ✅ **100% Green** |
 | [**`mongodb`**](mongodb/README.md) | Document Store | `mongo:7.0` | Polymorphic embedded execution strategies (`TWAP`/`VWAP`), append-only audit trail subdocuments, multi-stage aggregation (`$match` -> `$group` -> `$project` -> `$sort`), `$facet` multi-faceted reporting. | ✅ **100% Green** |
 | [**`cassandra`**](cassandra/README.md) | Wide-Column Store | `cassandra:4.1` | Time-series composite key `((ticker, bucket_date), execution_time, execution_id)`, disk clustering order (`CLUSTERING ORDER BY (execution_time DESC)`), Paxos Lightweight Transactions (`IF NOT EXISTS` & CAS updates). | ✅ **100% Green** |
