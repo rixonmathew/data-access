@@ -1,0 +1,8 @@
+spring:
+  application:
+    name: risingwave-streaming-surveillance
+  datasource:
+    url: jdbc:postgresql://${RISINGWAVE_HOST:localhost}:${RISINGWAVE_PORT:4566}/${RISINGWAVE_DB:dev}
+    username: ${RISINGWAVE_USER:root}
+    password: ${RISINGWAVE_PASSWORD:}
+    driver-class-name: org.postgresql.Driver

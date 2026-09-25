@@ -1,0 +1,8 @@
+spring:
+  application:
+    name: timescaledb-market-data
+  datasource:
+    url: jdbc:postgresql://${TIMESCALE_HOST:localhost}:${TIMESCALE_PORT:5432}/${TIMESCALE_DB:postgres}
+    username: ${TIMESCALE_USER:postgres}
+    password: ${TIMESCALE_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver

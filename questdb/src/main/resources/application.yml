@@ -1,0 +1,12 @@
+spring:
+  application:
+    name: questdb-market-data
+  datasource:
+    url: jdbc:postgresql://${QUESTDB_HOST:localhost}:${QUESTDB_PG_PORT:8812}/qdb
+    username: ${QUESTDB_USER:admin}
+    password: ${QUESTDB_PASSWORD:quest}
+    driver-class-name: org.postgresql.Driver
+
+questdb:
+  http-port: ${QUESTDB_HTTP_PORT:9000}
+  ilp-port: ${QUESTDB_ILP_PORT:9009}

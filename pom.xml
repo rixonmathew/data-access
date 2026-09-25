@@ -59,6 +59,12 @@
 		<module>apache-arrow</module>
 		<module>apache-age</module>
 		<module>databricks</module>
+		<module>questdb</module>
+		<module>timescaledb</module>
+		<module>risingwave</module>
+		<module>tidb</module>
+		<module>google-cloud-spanner</module>
+		<module>unitycatalog-oss</module>
 	</modules>
 
     <dependencyManagement>

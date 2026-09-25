@@ -1,0 +1,6 @@
+spring:
+  application:
+    name: unitycatalog-oss-governance
+
+unitycatalog:
+  base-url: ${UNITY_CATALOG_URL:http://localhost:8080}

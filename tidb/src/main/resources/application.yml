@@ -1,0 +1,8 @@
+spring:
+  application:
+    name: tidb-htap-trading
+  datasource:
+    url: jdbc:mysql://${TIDB_HOST:localhost}:${TIDB_PORT:4000}/${TIDB_DB:test}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    username: ${TIDB_USER:root}
+    password: ${TIDB_PASSWORD:}
+    driver-class-name: com.mysql.cj.jdbc.Driver

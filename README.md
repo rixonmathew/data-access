@@ -26,6 +26,8 @@ flowchart TD
     subgraph Relational["OLTP & Distributed SQL"]
         PG["reactive-postgres\n(PostgreSQL 18 R2DBC)"]
         CR["cockroachdb\n(CockroachDB v23.2)"]
+        TIDB["tidb\n(TiDB v8.5 HTAP)"]
+        SPANNER["google-cloud-spanner\n(TrueTime Interleaved)"]
         ORA["oracle26ai\n(Oracle Cloud R2DBC)"]
         H2["h2 / reactive-h2\n(In-Memory SQL)"]
         SQLITE["sqlite3\n(Embedded SQL)"]
@@ -51,11 +53,14 @@ flowchart TD
         S3["aws-s3\n(LocalStack S3)"]
     end
 
-    subgraph StreamingCDC["Streaming & Event-Driven CDC"]
+    subgraph StreamingCDC["Streaming & Complex Event Processing"]
         CDC["cdc-outbox\n(PostgreSQL + Redpanda/Kafka)"]
+        RW["risingwave\n(Continuous Streaming SQL)"]
     end
 
-    subgraph Analytics["Columnar OLAP, Lakehouse & Query Federation"]
+    subgraph Analytics["Columnar OLAP, Time-Series & Lakehouse"]
+        QDB["questdb\n(QuestDB 8.3 ILP & ASOF)"]
+        TSDB["timescaledb\n(TimescaleDB Hypertables)"]
         CH["clickhouse\n(ClickHouse 24.3 Columnar)"]
         DK["duckdb\n(DuckDB + S3 Parquet)"]
         DL["delta-lake\n(Delta Lake ACID Lakehouse)"]
@@ -65,12 +70,13 @@ flowchart TD
         TRINO["trino-federation\n(Trino Distributed SQL)"]
         TS["trinospark\n(Distributed Queries)"]
         DBR["databricks\n(Databricks Lakehouse & Cost Guard)"]
+        UC["unitycatalog-oss\n(Open Universal Governance)"]
     end
 
-    Accounts --> PG & CR
-    Orders --> MG & DDB & CS & CDC & TRINO
-    Quotes --> RD & RCS & CH & DK & DL & ICE & DKL & ARW & DBR
-    Exposure --> NJ & AGE
+    Accounts --> PG & CR & SPANNER
+    Orders --> MG & DDB & CS & CDC & TRINO & TIDB
+    Quotes --> RD & RCS & CH & DK & DL & ICE & DKL & ARW & DBR & QDB & TSDB & RW & UC
+    Exposure --> NJ & AGE & TIDB
     Research --> QD & PG
     Orders --> ORA & H2 & SQLITE
 ```
@@ -106,6 +112,12 @@ flowchart TD
 | [**`apache-ignite`**](apache-ignite/README.md) | In-Memory Cache | In-Memory Grid | Distributed key-value cache operations, person entity retrieval, and SQL queries on the Calcite engine (no H2). | ✅ **100% Green** |
 | [**`trinospark`**](trinospark/README.md) | Distributed Queries | Java Streams | Aggregations and grouping transformations over trade/order collection streams. | ✅ **100% Green** |
 | [**`trino-federation`**](trino-federation/README.md) | Distributed SQL Query Federation | `trinodb/trino:483` & `pgvector/pgvector:pg17` | Massively parallel processing (MPP) cross-engine SQL federation, multi-catalog auto-discovery (`postgresql`, `memory`, `tpch`, `system`), 3-way distributed hash JOINs across PostgreSQL relational tables and in-memory currency FX rates, predicate pushdown, and query plan explanation. | ✅ **100% Green** |
+| [**`questdb`**](questdb/README.md) | High-Throughput Time-Series | `questdb/questdb:8.3.2` | ILP (InfluxDB Line Protocol) streaming over TCP 9009, zero-cost latest quote resolution (`LATEST ON timestamp PARTITION BY symbol`), vectorized SIMD candlestick rollups (`SAMPLE BY 1s`), native trade-quote alignment (`ASOF JOIN`). | ✅ **100% Green** |
+| [**`timescaledb`**](timescaledb/README.md) | Time-Series Hypertables | `timescale/timescaledb:latest-pg16` | PostgreSQL hypertables time partitioning, dynamic `time_bucket` candlesticks, `ohlcv_1m` continuous aggregate materialized views, chunk-level columnar compression policy (`compress_segmentby`) and stats. | ✅ **100% Green** |
+| [**`risingwave`**](risingwave/README.md) | Streaming Database & CEP | `risingwavelabs/risingwave:latest` | PostgreSQL wire-compatible streaming database, append-friendly streaming tables, continuous incremental VWAP materialized views, complex event processing (CEP) detecting wash trading within sliding time windows, deterministic checkpointing via `FLUSH`. | ✅ **100% Green** |
+| [**`tidb`**](tidb/README.md) | Distributed HTAP | `pingcap/tidb:v8.5.0` | Distributed Hybrid Transactional & Analytical Processing (MySQL protocol), atomic transactional order placement and status transitions (OLTP), real-time portfolio net exposure and notional risk analytics (OLAP). | ✅ **100% Green** |
+| [**`google-cloud-spanner`**](google-cloud-spanner/README.md) | TrueTime Distributed NewSQL | `gcr.io/cloud-spanner-emulator/emulator` | Globally distributed NewSQL with TrueTime, parent-child interleaved tables (`TradingAccounts` -> `CustomerOrders` -> `TradeExecutions`), single-split atomic multi-table trade execution, and declarative `ON DELETE CASCADE`. | ✅ **100% Green** |
+| [**`unitycatalog-oss`**](unitycatalog-oss/README.md) | Open Universal Governance | `unitycatalog/unitycatalog:latest` | Open universal data & AI governance, 3-level namespace (`catalog.schema.table`), multi-format table metadata registration (Delta Lake & Parquet), and volumes for unstructured financial data (PCAP tick captures). | ✅ **100% Green** |
 | [**`hazelcast-server`**](hazelcast-server/README.md) | In-Memory Grid | In-Memory Hazelcast | Clustered in-memory data grid configuration. | ✅ **100% Green** |
 
 ---

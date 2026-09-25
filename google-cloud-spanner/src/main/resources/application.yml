@@ -1,0 +1,9 @@
+spring:
+  application:
+    name: google-cloud-spanner-trading
+
+spanner:
+  project-id: test-project
+  instance-id: test-instance
+  database-id: capital-markets-db
+  emulator-host: ${SPANNER_EMULATOR_HOST:localhost:9010}
