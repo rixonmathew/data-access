@@ -64,11 +64,12 @@ flowchart TD
         ARW["apache-arrow\n(Arrow + Flight / Flight SQL)"]
         TRINO["trino-federation\n(Trino Distributed SQL)"]
         TS["trinospark\n(Distributed Queries)"]
+        DBR["databricks\n(Databricks Lakehouse & Cost Guard)"]
     end
 
     Accounts --> PG & CR
     Orders --> MG & DDB & CS & CDC & TRINO
-    Quotes --> RD & RCS & CH & DK & DL & ICE & DKL & ARW
+    Quotes --> RD & RCS & CH & DK & DL & ICE & DKL & ARW & DBR
     Exposure --> NJ & AGE
     Research --> QD & PG
     Orders --> ORA & H2 & SQLITE
@@ -94,6 +95,7 @@ flowchart TD
 | [**`dynamodb`**](dynamodb/README.md) | Cloud NoSQL | `localstack:3.4.0` (DynamoDB) | Single-Table Design (Alex DeBrie pattern), single-roundtrip partition query for order + all fills, atomic multi-item transactions (`transactWriteItems`), optimistic concurrency (`@DynamoDbVersionAttribute`), GSI1 indexing. | ✅ **100% Green** |
 | [**`duckdb`**](duckdb/README.md) | Embedded OLAP | `localstack:3.4.0` (S3) | DuckDB embedded vectorized engine executing analytical queries directly against remote Parquet files stored in S3, out-of-core streaming, Parquet vs DuckDB format performance benchmarks. | ✅ **100% Green** |
 | [**`delta-lake`**](delta-lake/README.md) | Lakehouse Storage | `localstack:3.4.0` (S3) | Delta Lake ACID transactions, commit log (`_delta_log`), Time Travel (`VERSION AS OF 0` vs `1`), Schema Evolution (`ADD_COLUMNS`), DuckDB Parquet querying, LocalStack S3 sync. | ✅ **100% Green** |
+| [**`databricks`**](databricks/README.md) | Managed Lakehouse & Cloud | Databricks REST / Mock & Live | Free-Zone Cost Guard (`DatabricksCostGuard`), Unity Catalog metadata inspection (0 DBUs), Single-Node cluster enforcement (0 workers, max 10m autotermination), workspace cost audit, emergency killswitch, guarded SQL execution, live cloud connectivity. | ✅ **100% Green** |
 | [**`apache-iceberg`**](apache-iceberg/README.md) | Open Lakehouse | `localstack:3.4.0` (S3) | Apache Iceberg ACID transactions, metadata tree (`metadata.json`, manifest lists, manifests), Hidden Partitioning, in-place zero-copy Partition Evolution, Schema Evolution with field ID tracking, Time Travel snapshots, Snapshot Rollback, DuckDB analytics, LocalStack S3 replication. | ✅ **100% Green** |
 | [**`ducklake`**](ducklake/README.md) | SQL-Catalog Lakehouse | `postgres:17` & `localstack:3.4.0` (S3) | DuckLake open table format on embedded DuckDB 1.5: PostgreSQL metadata catalog with Parquet data files on S3, one snapshot per ACID commit, multi-statement transactions and rollback, Time Travel (`AT (VERSION => n)` / `AT (TIMESTAMP => ...)`), change feed (`table_changes`), Schema Evolution (`ADD COLUMN`), Partition Evolution (`ticker` → `year/month`), data inlining and flush, compaction, snapshot expiry and S3 file cleanup, Hive-partitioned Parquet pruning, REST API. | ✅ **100% Green** |
 | [**`apache-arrow`**](apache-arrow/README.md) | Columnar Format & Transport | none (in-process) | Apache Arrow 19 on Java 25: column vectors with validity bitmaps, zero-copy slicing, IPC stream/file formats, LZ4/ZSTD compression, dictionary encoding; zero-copy DuckDB ⇄ Arrow via the C Data Interface; Arrow Flight server (bearer-token auth, per-ticker endpoints fetched in parallel, DoPut datasets, DoExchange, custom actions); Flight SQL over DuckDB queried through the Flight SQL JDBC driver (prepared parameters, batch updates, metadata); JDBC vs Arrow vs Flight transfer benchmark. | ✅ **100% Green** |

@@ -58,6 +58,7 @@
 		<module>ducklake</module>
 		<module>apache-arrow</module>
 		<module>apache-age</module>
+		<module>databricks</module>
 	</modules>
 
     <dependencyManagement>

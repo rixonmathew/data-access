@@ -1,0 +1,27 @@
+server:
+  port: 8089
+
+databricks:
+  workspace-url: https://dbc-06bb552d-57db.cloud.databricks.com/?o=2102279257150258
+  org-id: 2102279257150258
+  token: ${DATABRICKS_TOKEN:REPLACE_WITH_YOUR_PAT}
+  free-tier-only: true
+  max-auto-termination-minutes: 10
+  max-statement-timeout-seconds: 30
+  max-query-rows: 100
+  enforce-single-node: true
+  auto-shutdown-on-exit: true
+  allowed-node-types:
+    - t3.medium
+    - t3.large
+    - t3.xlarge
+    - m5.large
+    - i3.xlarge
+    - SingleNode
+    - local[*]
+
+logging:
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} %-5level %logger{36} - %msg%n"
+  level:
+    com.rixon.learn.spring.data.databricks: info

@@ -1,0 +1,1 @@
+org.springframework.boot.env.EnvironmentPostProcessor=com.rixon.learn.spring.data.databricks.config.DotenvEnvironmentPostProcessor
