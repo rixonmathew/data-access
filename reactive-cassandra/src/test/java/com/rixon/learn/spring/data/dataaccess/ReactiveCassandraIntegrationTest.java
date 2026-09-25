@@ -10,7 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
-import org.testcontainers.containers.CassandraContainer;
+import org.testcontainers.cassandra.CassandraContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.EnabledIfDockerAvailable;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -30,10 +30,10 @@ import static org.awaitility.Awaitility.await;
 @SpringBootTest
 @Testcontainers
 @EnabledIfDockerAvailable
-public class ReactiveCassandraIntegrationTest {
+class ReactiveCassandraIntegrationTest {
 
     @Container
-    static CassandraContainer<?> cassandra = new CassandraContainer<>("cassandra:4.1");
+    static CassandraContainer cassandra = new CassandraContainer("cassandra:4.1");
 
     @DynamicPropertySource
     static void cassandraProperties(DynamicPropertyRegistry registry) throws Exception {

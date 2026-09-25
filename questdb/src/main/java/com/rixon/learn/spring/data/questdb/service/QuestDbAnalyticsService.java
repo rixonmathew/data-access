@@ -45,11 +45,23 @@ public class QuestDbAnalyticsService {
                 .build());
     }
 
+    private static final java.util.regex.Pattern SAFE_SYMBOL_PATTERN = java.util.regex.Pattern.compile("^[A-Za-z0-9_.-]+$");
+    private static final java.util.regex.Pattern SAFE_INTERVAL_PATTERN = java.util.regex.Pattern.compile("^[0-9]+[smhd]$", java.util.regex.Pattern.CASE_INSENSITIVE);
+
     /**
      * Demonstrates QuestDB's 'SAMPLE BY <interval> ALIGN TO CALENDAR'.
      * Creates OHLCV candlestick aggregations in a single vectorized SQL query with first/max/min/last.
      */
     public List<CandleStick> generateCandlesticks(String symbol, String sampleInterval) {
+        if (symbol == null || !SAFE_SYMBOL_PATTERN.matcher(symbol.trim()).matches()) {
+            throw new IllegalArgumentException("Invalid or unsafe symbol identifier: " + symbol);
+        }
+        if (sampleInterval == null || !SAFE_INTERVAL_PATTERN.matcher(sampleInterval.trim()).matches()) {
+            throw new IllegalArgumentException("Invalid sampleInterval (must match e.g. '1s', '5m', '1h', '1d'): " + sampleInterval);
+        }
+        String cleanSymbol = symbol.trim();
+        String cleanInterval = sampleInterval.trim();
+
         String sql = String.format(
                 "SELECT timestamp, " +
                 "first(last_price) as open, " +
@@ -60,14 +72,14 @@ public class QuestDbAnalyticsService {
                 "sum(last_price * volume) / sum(volume) as vwap " +
                 "FROM market_quotes " +
                 "WHERE symbol = '%s' " +
-                "SAMPLE BY %s;", symbol, sampleInterval);
+                "SAMPLE BY %s;", cleanSymbol, cleanInterval);
 
-        LOGGER.info("Executing QuestDB SAMPLE BY {} query for symbol '{}'...", sampleInterval, symbol);
+        LOGGER.info("Executing QuestDB SAMPLE BY {} query for symbol '{}'...", cleanInterval, cleanSymbol);
         return jdbcTemplate.query(sql, (rs, rowNum) -> {
             Timestamp ts = rs.getTimestamp("timestamp");
             return CandleStick.builder()
                     .timestamp(ts != null ? ts.toInstant() : null)
-                    .symbol(symbol)
+                    .symbol(cleanSymbol)
                     .open(rs.getDouble("open"))
                     .high(rs.getDouble("high"))
                     .low(rs.getDouble("low"))
@@ -85,6 +97,11 @@ public class QuestDbAnalyticsService {
      * QuestDB performs this out-of-order alignment natively in C++ / Assembly.
      */
     public List<TradeQuoteMatch> matchTradesWithQuotesAsof(String symbol) {
+        if (symbol == null || !SAFE_SYMBOL_PATTERN.matcher(symbol.trim()).matches()) {
+            throw new IllegalArgumentException("Invalid or unsafe symbol identifier: " + symbol);
+        }
+        String cleanSymbol = symbol.trim();
+
         String sql = String.format(
                 "SELECT t.trade_id, t.symbol, " +
                 "t.price as trade_price, t.quantity as trade_quantity, " +
@@ -94,9 +111,9 @@ public class QuestDbAnalyticsService {
                 "FROM trade_executions t " +
                 "ASOF JOIN market_quotes q ON (symbol) " +
                 "WHERE t.symbol = '%s' " +
-                "ORDER BY t.timestamp;", symbol);
+                "ORDER BY t.timestamp;", cleanSymbol);
 
-        LOGGER.info("Executing QuestDB ASOF JOIN for symbol '{}'...", symbol);
+        LOGGER.info("Executing QuestDB ASOF JOIN for symbol '{}'...", cleanSymbol);
         return jdbcTemplate.query(sql, (rs, rowNum) -> {
             Instant tradeTime = rs.getTimestamp("trade_time").toInstant();
             Timestamp qts = rs.getTimestamp("quote_time");

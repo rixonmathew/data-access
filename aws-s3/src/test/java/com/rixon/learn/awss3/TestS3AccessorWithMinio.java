@@ -1,17 +1,22 @@
 package com.rixon.learn.awss3;
 
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.Assumptions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 
 import java.net.HttpURLConnection;
+import java.net.URI;
 import java.net.URL;
 
-public class TestS3AccessorWithMinio {
+class TestS3AccessorWithMinio {
 
     private ObjectStoreConfiguration minioAWSConfig;
     private String endpoint;
 
     @BeforeEach
-    public void setup(){
+    void setup(){
 
         String aws_access_key_id="5YO2B3OFTBDBSO4F4AVT";
         String aws_secret_access_key="jghuCEoT7rBkB3F5yfPWNKzcTLllOa+2J+obKgNb";
@@ -25,7 +30,7 @@ public class TestS3AccessorWithMinio {
     @Test
     @DisplayName("Test upload of CSV file to S3 bucket")
     @Disabled("To be run locally only")
-    public void testS3upload() {
+    void testS3upload() {
         // Skip test if endpoint is not reachable
         Assumptions.assumeTrue(isEndpointReachable(endpoint), "MinIO endpoint is not reachable; skipping test");
 
@@ -36,7 +41,7 @@ public class TestS3AccessorWithMinio {
 
     private boolean isEndpointReachable(String endpointUrl) {
         try {
-            URL url = new URL(endpointUrl);
+            URL url = URI.create(endpointUrl).toURL();
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("HEAD");
             connection.setConnectTimeout(1000);

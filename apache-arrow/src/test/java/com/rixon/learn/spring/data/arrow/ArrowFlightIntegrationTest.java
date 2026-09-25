@@ -103,7 +103,7 @@ class ArrowFlightIntegrationTest {
         FlightInfo info = client.getInfo(FlightDescriptor.path("trades"), auth);
         assertThat(info.getRecords()).isEqualTo(ArrowIntegrationTest.SAMPLE_ROWS);
         assertThat(info.getEndpoints()).hasSize(5);                              // one per ticker
-        assertThat(info.getSchema().getFields()).extracting(f -> f.getName())
+        assertThat(info.getSchemaOptional().orElseThrow().getFields()).extracting(f -> f.getName())
                 .containsExactly("trade_id", "ticker", "price", "quantity", "trade_date", "venue");
 
         ExecutorService pool = Executors.newFixedThreadPool(info.getEndpoints().size());

@@ -9,8 +9,11 @@ import java.util.List;
 @RestController
 public class DataService {
 
-    @Autowired
-    private ContractCassRepository contractCassRepository;
+    private final ContractCassRepository contractCassRepository;
+
+    public DataService(ContractCassRepository contractCassRepository) {
+        this.contractCassRepository = contractCassRepository;
+    }
 
     @GetMapping("/contracts")
     public List<ContractCassandraNonReactive> allContracts() {

@@ -31,7 +31,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest
 @Testcontainers
 @EnabledIfDockerAvailable
-public class RedisIntegrationTest {
+class RedisIntegrationTest {
 
     @Container
     static GenericContainer<?> redis = new GenericContainer<>("redis:7.2-alpine")

@@ -14,7 +14,11 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.math.BigDecimal;
 
@@ -24,15 +28,18 @@ import static org.springframework.transaction.annotation.Propagation.REQUIRES_NE
 
 @RestController
 public class AccountController {
-    @Autowired
-    private AccountRepository accountRepository;
 
-    @Autowired
-    private PagedResourcesAssembler<Account> pagedResourcesAssembler;
+    private final AccountRepository accountRepository;
+    private final PagedResourcesAssembler<Account> pagedResourcesAssembler;
+
+    public AccountController(AccountRepository accountRepository, PagedResourcesAssembler<Account> pagedResourcesAssembler) {
+        this.accountRepository = accountRepository;
+        this.pagedResourcesAssembler = pagedResourcesAssembler;
+    }
 
     @GetMapping
-    public ResponseEntity<RepresentationModel> index() {
-        RepresentationModel index = new RepresentationModel();
+    public ResponseEntity<RepresentationModel<?>> index() {
+        RepresentationModel<?> index = new RepresentationModel<>();
 
         index.add(linkTo(methodOn(AccountController.class)
                 .listAccounts(PageRequest.of(0, 5)))
@@ -56,8 +63,9 @@ public class AccountController {
     @GetMapping(value = "/account/{id}")
     @Transactional(propagation = REQUIRES_NEW)
     public HttpEntity<AccountModel> getAccount(@PathVariable("id") Long accountId) {
-        return new ResponseEntity<>(accountModelAssembler().toModel(accountRepository.getById(accountId)),
-                HttpStatus.OK);
+        return accountRepository.findById(accountId)
+                .map(account -> ResponseEntity.ok(accountModelAssembler().toModel(account)))
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @PostMapping(value = "/transfer")

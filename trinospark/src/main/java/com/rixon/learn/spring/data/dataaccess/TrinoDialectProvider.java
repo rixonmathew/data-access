@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 import java.util.Optional;
 
 @Component
+@SuppressWarnings({"deprecation", "removal"})
 public class TrinoDialectProvider implements DialectResolver.JdbcDialectProvider {
     @Override
     public Optional<Dialect> getDialect(JdbcOperations operations) {

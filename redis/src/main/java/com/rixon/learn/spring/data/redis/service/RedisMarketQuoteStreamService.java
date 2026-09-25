@@ -3,7 +3,7 @@ package com.rixon.learn.spring.data.redis.service;
 import com.rixon.model.market.MarketQuote;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Range;
-import org.springframework.data.redis.connection.RedisZSetCommands;
+import org.springframework.data.redis.connection.Limit;
 import org.springframework.data.redis.connection.stream.MapRecord;
 import org.springframework.data.redis.connection.stream.RecordId;
 import org.springframework.data.redis.connection.stream.StreamRecords;
@@ -15,7 +15,6 @@ import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -39,7 +38,7 @@ public class RedisMarketQuoteStreamService {
 
     public List<MarketQuote> readLatestQuotes(int count) {
         List<MapRecord<String, Object, Object>> records = redisTemplate.opsForStream()
-                .reverseRange(STREAM_KEY, Range.unbounded(), RedisZSetCommands.Limit.limit().count(count));
+                .reverseRange(STREAM_KEY, Range.unbounded(), Limit.limit().count(count));
 
         if (records == null) {
             return List.of();
@@ -55,6 +54,6 @@ public class RedisMarketQuoteStreamService {
                     new BigDecimal((String) value.get("lastPrice")),
                     Long.parseLong((String) value.get("volume"))
             );
-        }).collect(Collectors.toList());
+        }).toList();
     }
 }

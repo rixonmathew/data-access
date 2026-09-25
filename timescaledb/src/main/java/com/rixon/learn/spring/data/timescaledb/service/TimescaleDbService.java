@@ -75,7 +75,14 @@ public class TimescaleDbService {
                 .build(), symbol);
     }
 
+    private static final java.util.regex.Pattern SAFE_INTERVAL_PATTERN =
+            java.util.regex.Pattern.compile("^[0-9]+\\s+(second|minute|hour|day|week|month|year)s?$", java.util.regex.Pattern.CASE_INSENSITIVE);
+
     public List<TimescaleCandle> getDynamicTimeBucketCandles(String symbol, String interval) {
+        if (interval == null || !SAFE_INTERVAL_PATTERN.matcher(interval.trim()).matches()) {
+            throw new IllegalArgumentException("Invalid or unsafe interval expression: " + interval);
+        }
+        String cleanInterval = interval.trim();
         String sql = String.format(
                 "SELECT time_bucket(INTERVAL '%s', time) AS bucket, symbol, " +
                 "first(price, time) as open, " +
@@ -86,7 +93,7 @@ public class TimescaleDbService {
                 "FROM market_ticks " +
                 "WHERE symbol = ? " +
                 "GROUP BY bucket, symbol " +
-                "ORDER BY bucket", interval);
+                "ORDER BY bucket", cleanInterval);
 
         return jdbcTemplate.query(sql, (rs, rowNum) -> TimescaleCandle.builder()
                 .bucket(rs.getTimestamp("bucket").toInstant())

@@ -17,7 +17,10 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -25,7 +28,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Testcontainers
 @EnabledIfDockerAvailable
 @ActiveProfiles("test")
-public class CockroachDBIntegrationTest {
+class CockroachDBIntegrationTest {
 
     @Container
     static CockroachContainer cockroach = new CockroachContainer("cockroachdb/cockroach:v23.2.0");

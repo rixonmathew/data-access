@@ -13,6 +13,7 @@ import java.util.Map;
  * Spring Boot EnvironmentPostProcessor that automatically loads properties from
  * databricks/.env or .env into the Spring Environment with high priority.
  */
+@SuppressWarnings({"deprecation", "removal"})
 public class DotenvEnvironmentPostProcessor implements EnvironmentPostProcessor, Ordered {
 
     public static final String PROPERTY_SOURCE_NAME = "databricksDotenvProperties";

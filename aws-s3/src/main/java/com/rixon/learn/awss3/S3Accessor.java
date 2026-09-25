@@ -21,41 +21,46 @@ import java.util.List;
 @Service
 public class S3Accessor {
 
-    private final static Logger LOGGER = LoggerFactory.getLogger(S3Accessor.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(S3Accessor.class);
 
     private final ObjectStoreConfiguration objectStoreConfiguration;
-    @Autowired
+
     public S3Accessor(ObjectStoreConfiguration objectStoreConfiguration) {
         this.objectStoreConfiguration = objectStoreConfiguration;
     }
 
     public void uploadInstrumentData(int count) {
-        //Generate mock objects
-        //Serialize into CSV format
-        //Upload to S3 bucket
         List<Instrument> instruments = DataGeneratorUtils.randomInstruments(count);
-        FileWriter fileWriter;
+        Path tempFile = null;
         try {
-            Path tempFile = Files.createTempFile(Path.of("/tmp"),"instruments", ".csv");
-            fileWriter = new FileWriter(tempFile.toFile());
-            CSVPrinter csvPrinter = new CSVPrinter(fileWriter, CSVFormat.DEFAULT);
-            instruments.forEach(instrument -> {
-                try {
-                    csvPrinter.printRecord(instrument.getId(),instrument.getType(),instrument.getName(),instrument.getMetadata());
-                } catch (IOException e) {
-                    LOGGER.warn("Error writing instrument data",e);
+            tempFile = Files.createTempFile("instruments", ".csv");
+            try (FileWriter fileWriter = new FileWriter(tempFile.toFile());
+                 CSVPrinter csvPrinter = new CSVPrinter(fileWriter, CSVFormat.DEFAULT)) {
+                for (Instrument instrument : instruments) {
+                    csvPrinter.printRecord(instrument.getId(), instrument.getType(), instrument.getName(), instrument.getMetadata());
                 }
-            });
-            csvPrinter.close();
-            LOGGER.info("Wrote the file @ [{}] ",tempFile);
-            LOGGER.info("Uploading data to S3 bucket [{}] of size [{}] bytes", objectStoreConfiguration.bucketName(),tempFile.toFile().length());
+            }
+
+            LOGGER.info("Wrote the file @ [{}]", tempFile);
+            LOGGER.info("Uploading data to S3 bucket [{}] of size [{}] bytes", objectStoreConfiguration.bucketName(), tempFile.toFile().length());
             long startTime = System.currentTimeMillis();
             S3Client s3 = objectStoreConfiguration.s3();
-            PutObjectRequest putObjectRequest = PutObjectRequest.builder().bucket(objectStoreConfiguration.bucketName()).key("instrument_data_"+count).build();
+            PutObjectRequest putObjectRequest = PutObjectRequest.builder()
+                    .bucket(objectStoreConfiguration.bucketName())
+                    .key("instrument_data_" + count)
+                    .build();
             s3.putObject(putObjectRequest, RequestBody.fromFile(tempFile.toFile()));
-            LOGGER.info("Done uploading in [{}] ms",System.currentTimeMillis()-startTime);
-        } catch ( IOException e  ) {
-            LOGGER.warn("Error writing file",e);
+            LOGGER.info("Done uploading in [{}] ms", System.currentTimeMillis() - startTime);
+        } catch (IOException e) {
+            LOGGER.warn("Error processing instrument data file", e);
+        } finally {
+            if (tempFile != null) {
+                try {
+                    Files.deleteIfExists(tempFile);
+                } catch (IOException e) {
+                    LOGGER.warn("Could not delete temporary file [{}]", tempFile, e);
+                }
+            }
         }
     }
 }

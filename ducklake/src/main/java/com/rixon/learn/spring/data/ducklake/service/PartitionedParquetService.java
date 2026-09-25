@@ -18,7 +18,11 @@ import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -29,11 +33,13 @@ import java.util.stream.Collectors;
 @Service
 public class PartitionedParquetService {
 
-    @Autowired
-    private DuckDBService duckDBService;
+    private final DuckDBService duckDBService;
+    private final S3Client s3Client;
 
-    @Autowired(required = false)
-    private S3Client s3Client;
+    public PartitionedParquetService(DuckDBService duckDBService, @Autowired(required = false) S3Client s3Client) {
+        this.duckDBService = duckDBService;
+        this.s3Client = s3Client;
+    }
 
     /**
      * Creates sample partitioned Parquet files from an Avro schema.
