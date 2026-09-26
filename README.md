@@ -129,6 +129,8 @@ flowchart TD
 * **Maven 3.9+**
 * **Docker Desktop** (or Colima / Rancher Desktop) with at least 4GB RAM allocated for Testcontainers
 
+> **Claude Code on the web:** the cloud image ships JDK 21 and does not start Docker. Paste [`scripts/cloud-env-setup.sh`](scripts/cloud-env-setup.sh) into the environment's *Setup script* to install JDK 25 and start `dockerd`. Without Docker, Testcontainers-based tests are skipped rather than failing.
+
 ### Running All Tests
 To compile and test individual modules or the full reactor:
 
