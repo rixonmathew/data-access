@@ -113,6 +113,7 @@
 					<argLine>
 						-javaagent:${settings.localRepository}/org/mockito/mockito-core/${mockito.version}/mockito-core-${mockito.version}.jar
 						-Xshare:off
+						-Duser.timezone=UTC
 					</argLine>
 				</configuration>
 			</plugin>
@@ -124,6 +125,7 @@
 					<argLine>
 						-javaagent:${settings.localRepository}/org/mockito/mockito-core/${mockito.version}/mockito-core-${mockito.version}.jar
 						-Xshare:off
+						-Duser.timezone=UTC
 					</argLine>
 				</configuration>
 			</plugin>

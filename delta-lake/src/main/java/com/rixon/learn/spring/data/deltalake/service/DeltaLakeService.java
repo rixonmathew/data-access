@@ -40,11 +40,33 @@ import java.util.UUID;
 @Slf4j
 public class DeltaLakeService {
 
+    static {
+        if (System.getProperty("os.name", "").toLowerCase().contains("win")) {
+            String hadoopHome = System.getProperty("hadoop.home.dir");
+            if (hadoopHome == null) {
+                File tempHadoopDir = new File(System.getProperty("java.io.tmpdir"), "hadoop_dummy");
+                File binDir = new File(tempHadoopDir, "bin");
+                binDir.mkdirs();
+                File winutils = new File(binDir, "winutils.exe");
+                try {
+                    if (!winutils.exists()) {
+                        winutils.createNewFile();
+                    }
+                } catch (IOException ignored) {}
+                System.setProperty("hadoop.home.dir", tempHadoopDir.getAbsolutePath());
+            }
+        }
+    }
+
     private final Configuration hadoopConf;
 
     public DeltaLakeService() {
         this.hadoopConf = new Configuration();
-        this.hadoopConf.set("fs.file.impl", "org.apache.hadoop.fs.LocalFileSystem");
+        if (System.getProperty("os.name", "").toLowerCase().contains("win")) {
+            this.hadoopConf.set("fs.file.impl", WindowsLocalFileSystem.class.getName());
+        } else {
+            this.hadoopConf.set("fs.file.impl", "org.apache.hadoop.fs.LocalFileSystem");
+        }
         this.hadoopConf.set("delta.logStore.class", "io.delta.storage.LocalLogStore");
         this.hadoopConf.setBoolean("fs.file.impl.disable.cache", true);
         this.hadoopConf.setBoolean("fs.s3a.impl.disable.cache", true);

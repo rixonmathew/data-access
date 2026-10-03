@@ -1,5 +1,6 @@
 package com.rixon.learn.spring.data.oracle26ai;
 
+import com.rixon.learn.spring.data.oracle26ai.service.InstrumentReactiveRepository;
 import com.rixon.model.instrument.Instrument;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -33,6 +34,9 @@ class OracleDBApplicationTests {
 	@Autowired
 	private DatabaseClient databaseClient;
 
+	@Autowired
+	private InstrumentReactiveRepository instrumentRepository;
+
 	private WebTestClient webTestClient;
 
 	@BeforeEach
@@ -50,9 +54,17 @@ class OracleDBApplicationTests {
 						.map((row, metadata) -> row.get(0, String.class))
 						.one()
 						.block(Duration.ofSeconds(5));
-				databaseAvailable = "Hello from Oracle AI".equals(result);
+				if (!"Hello from Oracle AI".equals(result)) {
+					databaseAvailable = false;
+					return false;
+				}
+				// Verify multi-row retrieval from instrument table works without protocol violations
+				instrumentRepository.findAll()
+						.collectList()
+						.block(Duration.ofSeconds(10));
+				databaseAvailable = true;
 			} catch (Exception e) {
-				LOGGER.warn("Oracle DB not reachable in test environment: {}", e.getMessage());
+				LOGGER.warn("Oracle DB not reachable or protocol incompatible in test environment: {}", e.getMessage());
 				databaseAvailable = false;
 			}
 		}

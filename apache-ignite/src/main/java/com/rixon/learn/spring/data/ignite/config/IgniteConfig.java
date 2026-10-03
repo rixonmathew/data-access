@@ -23,13 +23,22 @@ public class IgniteConfig {
     @Bean
     public Ignite igniteInstance() {
         IgniteConfiguration cfg = new IgniteConfiguration();
+        cfg.setLocalHost("127.0.0.1");
         
         // Configure discovery SPI
         TcpDiscoverySpi discoverySpi = new TcpDiscoverySpi();
+        discoverySpi.setLocalPort(14750);
+        discoverySpi.setLocalPortRange(100);
         TcpDiscoveryVmIpFinder ipFinder = new TcpDiscoveryVmIpFinder();
-        ipFinder.setAddresses(Arrays.asList("127.0.0.1:47500..47509"));
+        ipFinder.setAddresses(Arrays.asList("127.0.0.1:14750..14759"));
         discoverySpi.setIpFinder(ipFinder);
         cfg.setDiscoverySpi(discoverySpi);
+
+        // Configure communication SPI
+        org.apache.ignite.spi.communication.tcp.TcpCommunicationSpi commSpi = new org.apache.ignite.spi.communication.tcp.TcpCommunicationSpi();
+        commSpi.setLocalPort(14710);
+        commSpi.setLocalPortRange(100);
+        cfg.setCommunicationSpi(commSpi);
         
         // Run SQL on the Calcite engine (ignite-calcite) instead of the H2 engine from ignite-indexing
         cfg.setSqlConfiguration(new SqlConfiguration()

@@ -52,6 +52,24 @@ import java.util.stream.Collectors;
 @Slf4j
 public class IcebergService {
 
+    static {
+        if (System.getProperty("os.name", "").toLowerCase().contains("win")) {
+            String hadoopHome = System.getProperty("hadoop.home.dir");
+            if (hadoopHome == null) {
+                File tempHadoopDir = new File(System.getProperty("java.io.tmpdir"), "hadoop_dummy");
+                File binDir = new File(tempHadoopDir, "bin");
+                binDir.mkdirs();
+                File winutils = new File(binDir, "winutils.exe");
+                try {
+                    if (!winutils.exists()) {
+                        winutils.createNewFile();
+                    }
+                } catch (IOException ignored) {}
+                System.setProperty("hadoop.home.dir", tempHadoopDir.getAbsolutePath());
+            }
+        }
+    }
+
     public static final Schema BASE_TRADE_SCHEMA = new Schema(
             Types.NestedField.required(1, "tradeId", Types.StringType.get()),
             Types.NestedField.required(2, "ticker", Types.StringType.get()),
@@ -65,7 +83,11 @@ public class IcebergService {
 
     public IcebergService() {
         this.hadoopConf = new Configuration();
-        this.hadoopConf.set("fs.file.impl", "org.apache.hadoop.fs.LocalFileSystem");
+        if (System.getProperty("os.name", "").toLowerCase().contains("win")) {
+            this.hadoopConf.set("fs.file.impl", WindowsLocalFileSystem.class.getName());
+        } else {
+            this.hadoopConf.set("fs.file.impl", "org.apache.hadoop.fs.LocalFileSystem");
+        }
         this.hadoopConf.setBoolean("fs.file.impl.disable.cache", true);
         this.hadoopConf.setBoolean("fs.s3a.impl.disable.cache", true);
     }

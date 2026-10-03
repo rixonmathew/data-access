@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__idea__list_directory_tree",
+      "Bash(docker --version)",
+      "Bash(docker info *)",
+      "PowerShell(docker --version)",
+      "PowerShell(docker info --format '{{.ServerVersion}}')",
+      "PowerShell(Get-Command docker -ErrorAction SilentlyContinue; Test-Path \"C:\\\\Program Files\\\\Docker\\\\Docker\\\\resources\\\\bin\\\\docker.exe\"; Test-Path \"$env:USERPROFILE\\\\.docker\")",
+      "PowerShell(& \"C:\\\\Program Files\\\\Docker\\\\Docker\\\\resources\\\\bin\\\\docker.exe\" --version)",
+      "PowerShell(& \"C:\\\\Program Files\\\\Docker\\\\Docker\\\\resources\\\\bin\\\\docker.exe\" info --format '{{.ServerVersion}}' 2>&1)",
+      "PowerShell(& \"C:\\\\Program Files\\\\Docker\\\\Docker\\\\resources\\\\bin\\\\docker.exe\" ps -a --filter \"ancestor=localstack/localstack:latest\" --format \"table {{.ID}}\\\\t{{.Image}}\\\\t{{.Status}}\\\\t{{.Names}}\" 2>&1)",
+      "PowerShell(& \"C:\\\\Program Files\\\\Docker\\\\Docker\\\\resources\\\\bin\\\\docker.exe\" pull localstack/localstack:3.8.1 2>&1)",
+      "PowerShell($env:PATH = \"C:\\\\Program Files\\\\Docker\\\\Docker\\\\resources\\\\bin;\" + $env:PATH; docker pull localstack/localstack:3.8.1 2>&1 | Select-Object -Last 3)",
+      "Bash(PATH='/c/Program Files/Docker/Docker/resources/bin:__TRACKED_VAR__' ./mvnw -pl dynamodb -am test -Dtest=DynamoDbServiceTest)",
+      "PowerShell(Get-Command mvn -ErrorAction SilentlyContinue)",
+      "PowerShell(Get-Command mvnw -ErrorAction SilentlyContinue)",
+      "PowerShell(where.exe mvn 2>&1; where.exe mvnw 2>&1; Test-Path \"$env:MAVEN_HOME\"; $env:MAVEN_HOME; $env:M2_HOME)",
+      "PowerShell($env:PATH = \"C:\\\\Program Files\\\\Docker\\\\Docker\\\\resources\\\\bin;C:\\\\apps\\\\apache-maven-3.9.11\\\\bin;\" + $env:PATH; mvn -pl dynamodb -am test \"-Dtest=DynamoDbServiceTest\" 2>&1 | Select-Object -Last 100)"
+    ]
+  }
+}
