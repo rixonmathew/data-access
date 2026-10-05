@@ -47,7 +47,7 @@ class CdcOutboxIntegrationTest {
 
     @Container
     static RedpandaContainer redpanda = new RedpandaContainer(
-            DockerImageName.parse("docker.redpanda.com/redpandadata/redpanda:v24.1.1"));
+            DockerImageName.parse("redpandadata/redpanda:v24.1.1"));
 
     @Autowired
     private OrderOutboxService orderOutboxService;
