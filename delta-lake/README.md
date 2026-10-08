@@ -42,7 +42,6 @@ This module enables evaluating the core Databricks Lakehouse storage architectur
 ### 5. LocalStack S3 Lakehouse Sync
 - Uploads the complete Delta Lake table hierarchy (`_delta_log/*.json` and `part-*.parquet`) to **LocalStack S3** (`s3://lakehouse-market-data/delta/market_trades/`).
 - Validates object hierarchy, key paths, and content lengths using the AWS SDK v2 S3 client.
-
 ---
 
 ## Data Model & Schema

@@ -55,12 +55,6 @@ public class ReactivePostgresApplication {
         return args -> {
             LOGGER.info("Initializing database with sample data");
             
-            // Delete all existing persons
-            personRepository.deleteAll()
-                .doOnSuccess(v -> LOGGER.info("Deleted all existing persons"))
-                .doOnError(e -> LOGGER.error("Error deleting persons", e))
-                .subscribe();
-            
             // Create sample persons
             Flux<Person> persons = Flux.fromStream(
                 IntStream.range(1, 11).mapToObj(i -> {
@@ -74,11 +68,17 @@ public class ReactivePostgresApplication {
                 })
             );
             
-            // Save sample persons
-            personRepository.saveAll(persons)
-                .doOnComplete(() -> LOGGER.info("Sample data initialization completed"))
-                .doOnError(e -> LOGGER.error("Error initializing sample data", e))
-                .subscribe();
+            // Sequentially delete existing persons and save sample persons
+            try {
+                personRepository.deleteAll()
+                    .doOnSuccess(v -> LOGGER.info("Deleted all existing persons"))
+                    .thenMany(personRepository.saveAll(persons))
+                    .doOnComplete(() -> LOGGER.info("Sample data initialization completed"))
+                    .doOnError(e -> LOGGER.error("Error initializing sample data", e))
+                    .blockLast(java.time.Duration.ofSeconds(10));
+            } catch (Exception e) {
+                LOGGER.warn("Failed to complete sample data initialization: {}", e.getMessage());
+            }
         };
     }
 }
