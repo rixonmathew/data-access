@@ -21,7 +21,10 @@ import java.time.Duration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+// Pooling is disabled so a connection left in a bad state (e.g. after a cancelled fetch on macOS,
+// where Oracle JDBC cannot send out-of-band breaks) is closed instead of being reused by the next test.
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+		properties = "spring.r2dbc.pool.enabled=false")
 @ActiveProfiles(resolver = OSActiveProfilesResolver.class)
 class OracleDBApplicationTests {
 
@@ -118,9 +121,10 @@ class OracleDBApplicationTests {
 				.expectHeader().contentTypeCompatibleWith(MediaType.TEXT_EVENT_STREAM)
 				.returnResult(Instrument.class)
 				.getResponseBody()
-				.take(5)
+				// consume the whole stream: cancelling mid-fetch (e.g. take(5)) corrupts the Oracle connection on macOS
+				.collectList()
 				.as(StepVerifier::create)
-				.expectNextCount(5)
+				.assertNext(list -> assertThat(list).hasSizeGreaterThanOrEqualTo(5))
 				.verifyComplete();
 	}
 
@@ -154,18 +158,27 @@ class OracleDBApplicationTests {
 		instrument.setType("Test Type");
 		instrument.setMetadata("Test Metadata");
 
-		webTestClient.post().uri("/instruments")
+		Instrument savedInstrument = webTestClient.post().uri("/instruments")
 				.contentType(MediaType.APPLICATION_JSON)
 				.accept(MediaType.APPLICATION_JSON)
 				.bodyValue(instrument)
 				.exchange()
 				.expectStatus().isOk()
 				.expectBody(Instrument.class)
-				.consumeWith(result -> {
-					Instrument savedInstrument = result.getResponseBody();
-					assertThat(savedInstrument).isNotNull();
-					assertThat(savedInstrument.getId()).isNotNull();
-				});
+				.returnResult()
+				.getResponseBody();
+
+		assertThat(savedInstrument).isNotNull();
+		assertThat(savedInstrument.getId()).isNotNull();
+
+		// clean up so the instrument table does not grow on every run
+		webTestClient.delete().uri("/instruments/" + savedInstrument.getId())
+				.exchange()
+				.expectStatus().isOk();
+		instrumentRepository.existsById(savedInstrument.getId())
+				.as(StepVerifier::create)
+				.expectNext(false)
+				.verifyComplete();
 	}
 
 }
